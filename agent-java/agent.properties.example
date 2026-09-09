@@ -1,0 +1,7 @@
+# Configuracion del agente. Las variables de entorno SENTINELA_* tienen prioridad.
+server.id        = srv-core-01
+agent.secret     = pegar-aqui-el-secreto-generado-por-la-api
+gateway.url      = http://10.20.4.2:8081
+interval.seconds = 5
+services.watch   = nginx,postgresql,redis
+ports.baseline   = 22,80,443,5432,6379

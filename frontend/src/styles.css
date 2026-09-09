@@ -1,0 +1,368 @@
+/*
+ * Capa de tema sobre Bootstrap 5.
+ *
+ * No se sobreescribe Bootstrap a la fuerza: se redefinen sus propias variables
+ * CSS (--bs-*) y se añaden las nuestras (--snt-*). Asi seguimos recibiendo
+ * gratis la rejilla, los formularios, los estados de foco y la accesibilidad,
+ * y solo cambia la piel. Actualizar Bootstrap no rompe nada de esto.
+ *
+ * La tipografia usa la pila de sistema encabezada por -apple-system: en macOS
+ * e iOS se ve con San Francisco, la fuente de las Human Interface Guidelines.
+ */
+
+:root,
+[data-bs-theme='dark'] {
+  --bs-body-bg: #0b0f14;
+  --bs-body-color: #e6edf3;
+  --bs-body-font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI',
+    Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --bs-border-color: #1e2631;
+  --bs-border-color-translucent: rgba(255, 255, 255, 0.08);
+  --bs-secondary-color: #8b97a6;
+  --bs-emphasis-color: #ffffff;
+  --bs-primary: #2f7cf6;
+  --bs-primary-rgb: 47, 124, 246;
+  --bs-link-color: #6ea8ff;
+  --bs-link-hover-color: #9cc4ff;
+  --bs-border-radius: 0.75rem;
+  --bs-border-radius-sm: 0.5rem;
+  --bs-border-radius-lg: 1rem;
+
+  /* Semaforo de estado, unico en toda la app. */
+  --snt-ok: #35c759;
+  --snt-warn: #ff9f0a;
+  --snt-crit: #ff453a;
+  --snt-track: rgba(255, 255, 255, 0.08);
+  --snt-superficie: #111823;
+  --snt-superficie-alta: #16202e;
+}
+
+body {
+  background:
+    radial-gradient(1200px 600px at 15% -10%, rgba(47, 124, 246, 0.10), transparent 60%),
+    radial-gradient(900px 500px at 95% 0%, rgba(53, 199, 89, 0.06), transparent 55%),
+    var(--bs-body-bg);
+  min-height: 100dvh;
+  -webkit-font-smoothing: antialiased;
+  letter-spacing: -0.006em;
+}
+
+/* Cifras siempre alineadas: evita el baile de dígitos al actualizar en vivo. */
+.tabular,
+.gauge-valor,
+code {
+  font-variant-numeric: tabular-nums;
+}
+
+/* --------------------------------------------------------------- acceso */
+
+.login-shell {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+}
+
+.login-card {
+  width: min(420px, 100%);
+  background: color-mix(in srgb, var(--snt-superficie) 92%, transparent);
+  border: 1px solid var(--bs-border-color) !important;
+  backdrop-filter: blur(18px);
+}
+
+.brand-mark {
+  width: 52px;
+  height: 52px;
+  border-radius: 15px;
+  display: grid;
+  place-items: center;
+  font-size: 1.6rem;
+  color: #fff;
+  background: linear-gradient(145deg, #2f7cf6, #1a4fd0);
+  box-shadow: 0 8px 24px rgba(47, 124, 246, 0.35);
+}
+
+.brand-mark.chico {
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+  font-size: 0.95rem;
+  box-shadow: none;
+}
+
+.codigo-otp {
+  letter-spacing: 0.6em;
+  padding-left: 0.6em;
+  font-weight: 600;
+}
+
+.pantalla-carga {
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+}
+
+/* ---------------------------------------------------------------- marco */
+
+.barra-superior {
+  background: color-mix(in srgb, var(--snt-superficie) 85%, transparent);
+  backdrop-filter: saturate(180%) blur(20px);
+  border-bottom: 1px solid var(--bs-border-color);
+  padding-block: 0.5rem;
+}
+
+.nav-pills-sm .nav-link {
+  padding: 0.25rem 0.75rem;
+  font-size: 0.875rem;
+  border-radius: 999px;
+  color: var(--bs-secondary-color);
+  border: 0;
+  background: transparent;
+}
+
+.nav-pills-sm .nav-link.active {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--bs-body-color);
+}
+
+/* -------------------------------------------------------------- mosaico */
+
+.mosaico {
+  background: var(--snt-superficie);
+  border: 1px solid var(--bs-border-color);
+  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+}
+
+.mosaico .card-header {
+  background: transparent;
+  border-bottom: 1px solid var(--bs-border-color);
+  padding: 0.6rem 0.9rem;
+}
+
+.mosaico .card-body {
+  padding: 0.9rem;
+  min-height: 170px;
+}
+
+.mosaico.alto-2 .card-body {
+  min-height: 320px;
+}
+
+/* Mosaicos cuyo contenido manda sobre la altura (el semaforo de flota). */
+.mosaico.auto .card-body {
+  min-height: 0;
+}
+
+.mosaico.editable {
+  cursor: grab;
+  border-style: dashed;
+}
+
+.mosaico.editable:hover {
+  border-color: var(--bs-primary);
+}
+
+.mosaico.arrastrando {
+  opacity: 0.45;
+  transform: scale(0.98);
+}
+
+.mosaico.destino {
+  border-color: var(--bs-primary);
+  box-shadow: 0 0 0 3px rgba(47, 124, 246, 0.22);
+}
+
+.asa {
+  cursor: grab;
+}
+
+.mw-50 {
+  max-width: 50%;
+}
+
+.min-w-0 {
+  min-width: 0;
+}
+
+/* --------------------------------------------------------------- datos */
+
+.gauge-valor {
+  font-size: 1.85rem;
+  font-weight: 600;
+  fill: var(--bs-body-color);
+}
+
+.gauge-unidad {
+  font-size: 0.7rem;
+  fill: var(--bs-secondary-color);
+}
+
+.gauge-arc {
+  transition: stroke-dasharray 0.5s cubic-bezier(0.22, 1, 0.36, 1), stroke 0.3s ease;
+}
+
+.barra-mini {
+  height: 5px;
+  background: var(--snt-track);
+}
+
+.barra-mini .progress-bar {
+  transition: width 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.fleet-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 0.5rem;
+}
+
+.fleet-chip {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.7rem;
+  border-radius: var(--bs-border-radius-sm);
+  background: var(--snt-superficie-alta);
+  border: 1px solid var(--bs-border-color);
+  color: var(--bs-body-color);
+  text-decoration: none;
+  font-size: 0.85rem;
+  transition: border-color 0.15s ease, transform 0.15s ease;
+  min-width: 0;
+}
+
+/* Sin esto el texto flexible no se recorta y la tarjeta desborda a lo ancho. */
+.fleet-chip .text-truncate {
+  min-width: 0;
+}
+
+.fleet-chip:hover {
+  transform: translateY(-1px);
+  border-color: var(--bs-primary);
+  color: var(--bs-body-color);
+}
+
+.fleet-chip .valor {
+  font-variant-numeric: tabular-nums;
+  color: var(--bs-secondary-color);
+}
+
+.punto {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  flex: 0 0 auto;
+  background: var(--bs-secondary-color);
+}
+
+.estado-ok .punto,
+.punto.estado-ok {
+  background: var(--snt-ok);
+  box-shadow: 0 0 0 3px rgba(53, 199, 89, 0.18);
+}
+
+.estado-warning .punto,
+.punto.estado-warning {
+  background: var(--snt-warn);
+  box-shadow: 0 0 0 3px rgba(255, 159, 10, 0.18);
+}
+
+.estado-critical .punto,
+.punto.estado-critical {
+  background: var(--snt-crit);
+  box-shadow: 0 0 0 3px rgba(255, 69, 58, 0.2);
+  animation: latido 1.6s ease-in-out infinite;
+}
+
+.estado-offline .punto,
+.punto.estado-offline {
+  background: #4b5563;
+}
+
+@keyframes latido {
+  50% { box-shadow: 0 0 0 7px rgba(255, 69, 58, 0); }
+}
+
+/* Respeta la preferencia del sistema: nada de parpadeos si molestan. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+/* -------------------------------------------------------------- alertas */
+
+.lista-alertas .alerta {
+  padding: 0.5rem 0.6rem;
+  border-radius: var(--bs-border-radius-sm);
+  border-left: 3px solid var(--bs-secondary-color);
+  background: var(--snt-superficie-alta);
+  margin-bottom: 0.4rem;
+}
+
+.lista-alertas .sev-warning { border-left-color: var(--snt-warn); }
+.lista-alertas .sev-critical { border-left-color: var(--snt-crit); }
+.lista-alertas .sev-info { border-left-color: var(--bs-primary); }
+
+/* --------------------------------------------------------------- tablas */
+
+.tabla-compacta th {
+  font-weight: 500;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--bs-secondary-color);
+}
+
+.tabla-compacta td,
+.tabla-compacta th {
+  padding: 0.3rem 0.4rem;
+}
+
+.tabla-servidores th {
+  font-weight: 500;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--bs-secondary-color);
+  border-bottom-color: var(--bs-border-color);
+}
+
+.tabla-servidores code {
+  color: #9cc4ff;
+  font-size: 0.78rem;
+}
+
+.ip-celda {
+  min-width: 130px;
+}
+
+/* --------------------------------------------------------------- editor */
+
+.editor-mosaico {
+  background: var(--snt-superficie);
+  border-left: 1px solid var(--bs-border-color);
+  width: min(420px, 92vw);
+  display: flex;
+  flex-direction: column;
+}
+
+.editor-mosaico .offcanvas-body {
+  overflow-y: auto;
+}
+
+.btn-tipo {
+  padding: 0.5rem 0.6rem;
+}
+
+/* ------------------------------------------------------------ responsive */
+
+@media (max-width: 575.98px) {
+  .mosaico .card-body { min-height: 150px; }
+  .fleet-grid { grid-template-columns: 1fr; }
+  .barra-superior .navbar-brand span:last-child { display: none; }
+}

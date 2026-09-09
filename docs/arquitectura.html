@@ -1,0 +1,949 @@
+<title>Arquitectura de Sentinela</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Serif:ital,wght@0,400;0,500;1,400&display=swap">
+
+<style>
+  /* ---------------------------------------------------------------
+     Tokens. El bloque :root define la paleta clara completa; los dos
+     bloques siguientes solo redefinen tokens, nunca componentes.
+     --------------------------------------------------------------- */
+  :root {
+    --ground: #eceff2;
+    --surface: #ffffff;
+    --surface-sunk: #e3e8ec;
+    --ink: #0f1720;
+    --ink-soft: #3d4a56;
+    --ink-mute: #61707d;
+    --rule: #cfd8de;
+    --rule-soft: #dfe5ea;
+    --accent: #0d6a70;
+    --accent-ink: #094a4e;
+    --accent-wash: #dceaea;
+    --ok: #1c7a45;
+    --warn: #9a5c00;
+    --crit: #b3352c;
+    --shadow: 0 1px 2px rgba(15, 23, 32, .06), 0 8px 24px -18px rgba(15, 23, 32, .35);
+
+    --serif: "IBM Plex Serif", Georgia, "Times New Roman", serif;
+    --sans: "IBM Plex Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+    --mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Consolas, monospace;
+
+    color-scheme: light;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground: #0b1116;
+      --surface: #121a21;
+      --surface-sunk: #0e161c;
+      --ink: #dde5ec;
+      --ink-soft: #b3c0cb;
+      --ink-mute: #8494a1;
+      --rule: #253039;
+      --rule-soft: #1c252d;
+      --accent: #58c4c8;
+      --accent-ink: #8fdcdf;
+      --accent-wash: #12292b;
+      --ok: #3ecf70;
+      --warn: #eda033;
+      --crit: #f0665c;
+      --shadow: 0 1px 2px rgba(0, 0, 0, .5), 0 10px 30px -20px rgba(0, 0, 0, .9);
+      color-scheme: dark;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --ground: #0b1116;
+    --surface: #121a21;
+    --surface-sunk: #0e161c;
+    --ink: #dde5ec;
+    --ink-soft: #b3c0cb;
+    --ink-mute: #8494a1;
+    --rule: #253039;
+    --rule-soft: #1c252d;
+    --accent: #58c4c8;
+    --accent-ink: #8fdcdf;
+    --accent-wash: #12292b;
+    --ok: #3ecf70;
+    --warn: #eda033;
+    --crit: #f0665c;
+    --shadow: 0 1px 2px rgba(0, 0, 0, .5), 0 10px 30px -20px rgba(0, 0, 0, .9);
+    color-scheme: dark;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    background: var(--ground);
+    color: var(--ink);
+    font-family: var(--serif);
+    font-size: 17px;
+    line-height: 1.62;
+  }
+
+  .page {
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: clamp(1.75rem, 4vw, 4rem) clamp(1.1rem, 4vw, 2.5rem) 5rem;
+    display: flex;
+    flex-direction: column;
+    gap: clamp(2.5rem, 5vw, 4rem);
+  }
+
+  .prose { max-width: 68ch; }
+
+  h1, h2, h3, .eyebrow, .facts, table, .chip, code, figcaption {
+    font-family: var(--sans);
+  }
+
+  h1 {
+    font-size: clamp(2rem, 5vw, 3rem);
+    line-height: 1.08;
+    font-weight: 600;
+    letter-spacing: -0.022em;
+    margin: 0;
+    text-wrap: balance;
+  }
+
+  h2 {
+    font-size: clamp(1.3rem, 2.6vw, 1.6rem);
+    line-height: 1.2;
+    font-weight: 600;
+    letter-spacing: -0.015em;
+    margin: 0;
+    text-wrap: balance;
+  }
+
+  h3 {
+    font-size: .8rem;
+    font-family: var(--mono);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .1em;
+    color: var(--accent);
+    margin: 0 0 .5rem;
+  }
+
+  p { margin: 0 0 1rem; }
+  p:last-child { margin-bottom: 0; }
+
+  a {
+    color: var(--accent);
+    text-decoration-thickness: 1px;
+    text-underline-offset: 2px;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+    border-radius: 2px;
+  }
+
+  code {
+    font-family: var(--mono);
+    font-size: .86em;
+    background: var(--surface-sunk);
+    padding: .1em .34em;
+    border-radius: 3px;
+    color: var(--ink-soft);
+  }
+
+  strong { font-weight: 600; color: var(--ink); }
+
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: .74rem;
+    text-transform: uppercase;
+    letter-spacing: .13em;
+    color: var(--ink-mute);
+    margin: 0 0 .6rem;
+  }
+
+  /* ------------------------------------------------- encabezado */
+
+  .masthead {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    border-bottom: 2px solid var(--ink);
+    padding-bottom: 1.75rem;
+  }
+
+  .masthead .lede {
+    font-size: 1.15rem;
+    color: var(--ink-soft);
+    max-width: 62ch;
+    margin: 0;
+  }
+
+  .facts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0 2.25rem;
+    font-family: var(--mono);
+    font-size: .78rem;
+    letter-spacing: .04em;
+    color: var(--ink-mute);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .facts b {
+    color: var(--ink);
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* -------------------------------------------------- diagrama */
+
+  figure {
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: .9rem;
+  }
+
+  .figure-frame {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    padding: clamp(.75rem, 2vw, 1.5rem);
+    overflow-x: auto;
+    box-shadow: var(--shadow);
+  }
+
+  .figure-frame svg {
+    display: block;
+    min-width: 660px;
+    max-width: 100%;
+    height: auto;
+    color: var(--ink-soft);
+  }
+
+  figcaption {
+    font-size: .86rem;
+    color: var(--ink-mute);
+    max-width: 68ch;
+  }
+
+  /* ------------------------------------------------ secciones */
+
+  .band {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
+  .tech {
+    display: grid;
+    grid-template-columns: minmax(0, 22rem) minmax(0, 1fr);
+    gap: clamp(1.25rem, 3vw, 2.75rem);
+    padding-top: 1.75rem;
+    border-top: 1px solid var(--rule);
+  }
+
+  .tech-head { display: flex; flex-direction: column; gap: .55rem; }
+
+  .tech-head .role {
+    font-size: .95rem;
+    color: var(--ink-mute);
+    font-style: italic;
+    margin: 0;
+  }
+
+  .tech-body { display: flex; flex-direction: column; gap: 1.5rem; }
+
+  .tech-body ul {
+    margin: 0;
+    padding-left: 1.1rem;
+    display: flex;
+    flex-direction: column;
+    gap: .6rem;
+  }
+
+  .tech-body li::marker { color: var(--accent); }
+
+  .callout {
+    border-left: 3px solid var(--accent);
+    background: var(--accent-wash);
+    padding: .85rem 1.1rem;
+    font-size: .97rem;
+    color: var(--ink-soft);
+    border-radius: 0 3px 3px 0;
+  }
+
+  /* --------------------------------------------------- tablas */
+
+  .table-wrap { overflow-x: auto; }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: .9rem;
+    min-width: 32rem;
+  }
+
+  caption {
+    text-align: left;
+    font-family: var(--mono);
+    font-size: .74rem;
+    text-transform: uppercase;
+    letter-spacing: .13em;
+    color: var(--ink-mute);
+    padding-bottom: .6rem;
+  }
+
+  th, td {
+    text-align: left;
+    padding: .6rem .9rem .6rem 0;
+    border-bottom: 1px solid var(--rule-soft);
+    vertical-align: top;
+  }
+
+  th {
+    font-size: .72rem;
+    font-family: var(--mono);
+    text-transform: uppercase;
+    letter-spacing: .1em;
+    color: var(--ink-mute);
+    font-weight: 500;
+    border-bottom-color: var(--rule);
+  }
+
+  td:first-child { color: var(--ink); font-weight: 500; white-space: nowrap; }
+  td code { white-space: nowrap; }
+
+  /* ---------------------------------------------------- chips */
+
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: .38rem;
+    font-family: var(--mono);
+    font-size: .7rem;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    white-space: nowrap;
+  }
+
+  .chip::before {
+    content: "";
+    width: .5rem;
+    height: .5rem;
+    border-radius: 50%;
+    background: currentColor;
+  }
+
+  .chip.ok { color: var(--ok); }
+  .chip.warn { color: var(--warn); }
+  .chip.crit { color: var(--crit); }
+
+  /* ------------------------------------------------ verificado */
+
+  .checks {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+    gap: 1px;
+    background: var(--rule);
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+
+  .check {
+    background: var(--surface);
+    padding: 1.1rem 1.2rem;
+    display: flex;
+    flex-direction: column;
+    gap: .35rem;
+  }
+
+  .check .num {
+    font-family: var(--mono);
+    font-size: 1.5rem;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.02em;
+    color: var(--accent);
+    line-height: 1;
+  }
+
+  .check .what {
+    font-family: var(--sans);
+    font-size: .88rem;
+    color: var(--ink-soft);
+    line-height: 1.45;
+  }
+
+  /* --------------------------------------------------- avisos */
+
+  .gaps {
+    display: flex;
+    flex-direction: column;
+    gap: .9rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    max-width: 68ch;
+  }
+
+  .gaps li {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: .85rem;
+    align-items: baseline;
+    font-size: .97rem;
+    color: var(--ink-soft);
+  }
+
+  .gaps .tag {
+    font-family: var(--mono);
+    font-size: .68rem;
+    text-transform: uppercase;
+    letter-spacing: .1em;
+    color: var(--crit);
+    border: 1px solid currentColor;
+    border-radius: 2px;
+    padding: .1rem .4rem;
+    white-space: nowrap;
+  }
+
+  footer {
+    border-top: 1px solid var(--rule);
+    padding-top: 1.5rem;
+    font-family: var(--mono);
+    font-size: .76rem;
+    letter-spacing: .04em;
+    color: var(--ink-mute);
+    display: flex;
+    flex-wrap: wrap;
+    gap: .4rem 1.5rem;
+  }
+
+  @media (max-width: 720px) {
+    .tech { grid-template-columns: minmax(0, 1fr); }
+    body { font-size: 16px; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { animation-duration: .001ms !important; transition-duration: .001ms !important; }
+  }
+</style>
+
+<div class="page">
+
+  <header class="masthead">
+    <p class="eyebrow">Prototipo · monitoreo de servidores</p>
+    <h1>Arquitectura de Sentinela</h1>
+    <p class="lede">
+      Cuatro procesos, cuatro lenguajes. Qué hace cada uno, por qué esa tecnología
+      y no otra, y cómo se emplea en el código.
+    </p>
+    <ul class="facts">
+      <li><b>4</b> procesos</li>
+      <li><b>4 370</b> líneas</li>
+      <li><b>6</b> servidores en la demo</li>
+      <li><b>5 s</b> por muestra</li>
+    </ul>
+  </header>
+
+  <!-- ============================================ el mecanismo -->
+  <section class="band">
+    <div class="prose">
+      <h2>El camino de un dato</h2>
+      <p>
+        Una muestra sale del servidor vigilado, se evalúa contra las reglas y aparece
+        en la pantalla del operador sin tocar el panel administrativo. Ese reparto es
+        la decisión estructural de la que cuelgan todas las demás.
+      </p>
+    </div>
+
+    <figure>
+      <div class="figure-frame">
+        <svg viewBox="0 0 900 400" role="img"
+             aria-label="El agente Java envía muestras firmadas al gateway Node, que las difunde por WebSocket al navegador; la API PHP solo recibe latidos e histórico y atiende las peticiones REST del panel.">
+          <defs>
+            <marker id="pta" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <path d="M 0 0 L 10 5 L 0 10 z" fill="currentColor"></path>
+            </marker>
+            <marker id="pta-ac" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--accent)"></path>
+            </marker>
+          </defs>
+
+          <!-- agentes: pila de tres para sugerir "uno por host" -->
+          <rect x="34" y="78" width="176" height="86" rx="3" fill="var(--surface-sunk)" stroke="currentColor" stroke-width="1" opacity=".45"></rect>
+          <rect x="27" y="71" width="176" height="86" rx="3" fill="var(--surface-sunk)" stroke="currentColor" stroke-width="1" opacity=".7"></rect>
+          <rect x="20" y="64" width="176" height="86" rx="3" fill="var(--surface)" stroke="currentColor" stroke-width="1.4"></rect>
+          <text x="38" y="94" font-family="IBM Plex Sans, sans-serif" font-size="14" font-weight="600" fill="currentColor">Agente Java</text>
+          <text x="38" y="114" font-family="IBM Plex Mono, monospace" font-size="11" fill="currentColor" opacity=".75">uno por host</text>
+          <text x="38" y="132" font-family="IBM Plex Mono, monospace" font-size="11" fill="currentColor" opacity=".75">linux · win · macos</text>
+
+          <!-- gateway -->
+          <rect x="352" y="60" width="196" height="94" rx="3" fill="var(--surface)" stroke="var(--accent)" stroke-width="2"></rect>
+          <text x="370" y="90" font-family="IBM Plex Sans, sans-serif" font-size="14" font-weight="600" fill="currentColor">Gateway Node/TS</text>
+          <text x="370" y="110" font-family="IBM Plex Mono, monospace" font-size="11" fill="currentColor" opacity=".75">motor de alertas</text>
+          <text x="370" y="128" font-family="IBM Plex Mono, monospace" font-size="11" fill="currentColor" opacity=".75">60 muestras en RAM</text>
+
+          <!-- navegador -->
+          <rect x="700" y="64" width="176" height="86" rx="3" fill="var(--surface)" stroke="currentColor" stroke-width="1.4"></rect>
+          <text x="718" y="94" font-family="IBM Plex Sans, sans-serif" font-size="14" font-weight="600" fill="currentColor">Panel React 19</text>
+          <text x="718" y="114" font-family="IBM Plex Mono, monospace" font-size="11" fill="currentColor" opacity=".75">mosaicos + Bootstrap</text>
+
+          <!-- API PHP -->
+          <rect x="300" y="272" width="300" height="80" rx="3" fill="var(--surface)" stroke="currentColor" stroke-width="1.4"></rect>
+          <text x="320" y="302" font-family="IBM Plex Sans, sans-serif" font-size="14" font-weight="600" fill="currentColor">API PHP</text>
+          <text x="320" y="322" font-family="IBM Plex Mono, monospace" font-size="11" fill="currentColor" opacity=".75">identidad · 2FA · catálogo · histórico</text>
+
+          <!-- base de datos -->
+          <g stroke="currentColor" stroke-width="1.2" fill="var(--surface-sunk)">
+            <ellipse cx="720" cy="285" rx="52" ry="13"></ellipse>
+            <path d="M668 285 v42 a52 13 0 0 0 104 0 v-42" fill="var(--surface-sunk)"></path>
+          </g>
+          <text x="720" y="322" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="11" fill="currentColor" opacity=".8">SQLite</text>
+
+          <!-- eje de tiempo real, en color: agente -> gateway -> navegador -->
+          <line x1="200" y1="107" x2="344" y2="107" stroke="var(--accent)" stroke-width="2" marker-end="url(#pta-ac)"></line>
+          <text x="272" y="96" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="11" fill="var(--accent)">POST /ingest</text>
+          <text x="272" y="126" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="10" fill="var(--accent)" opacity=".85">HMAC-SHA256 · 5 s</text>
+
+          <line x1="556" y1="107" x2="692" y2="107" stroke="var(--accent)" stroke-width="2" marker-end="url(#pta-ac)"></line>
+          <text x="624" y="96" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="11" fill="var(--accent)">WebSocket</text>
+          <text x="624" y="126" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="10" fill="var(--accent)" opacity=".85">/stream</text>
+
+          <!-- lazo de silencio -->
+          <path d="M400 58 C 386 14, 514 14, 500 58" fill="none" stroke="var(--accent)" stroke-width="1.6" stroke-dasharray="5 4" marker-end="url(#pta-ac)"></path>
+          <text x="450" y="18" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="11" fill="var(--accent)">silencio &gt; 15 s → caída</text>
+
+          <!-- gateway <-> php -->
+          <line x1="424" y1="162" x2="424" y2="264" stroke="currentColor" stroke-width="1.4" marker-end="url(#pta)"></line>
+          <text x="436" y="200" font-family="IBM Plex Mono, monospace" font-size="11" fill="currentColor" opacity=".8">latido + alertas</text>
+          <line x1="478" y1="264" x2="478" y2="162" stroke="currentColor" stroke-width="1.4" stroke-dasharray="4 4" marker-end="url(#pta)"></line>
+          <text x="490" y="240" font-family="IBM Plex Mono, monospace" font-size="11" fill="currentColor" opacity=".8">secretos HMAC</text>
+
+          <!-- navegador -> php -->
+          <path d="M788 158 v154 h-180" fill="none" stroke="currentColor" stroke-width="1.4" marker-end="url(#pta)"></path>
+          <text x="800" y="215" font-family="IBM Plex Mono, monospace" font-size="11" fill="currentColor" opacity=".8">REST /api</text>
+          <text x="800" y="232" font-family="IBM Plex Mono, monospace" font-size="10" fill="currentColor" opacity=".65">sesión · mosaicos</text>
+
+          <!-- php -> db -->
+          <line x1="608" y1="312" x2="660" y2="312" stroke="currentColor" stroke-width="1.4" marker-end="url(#pta)"></line>
+        </svg>
+      </div>
+      <figcaption>
+        El camino de tiempo real (en color) nunca pasa por PHP. El panel guarda quién
+        eres, qué servidores existen y qué pasó; el gateway se encarga de lo que cambia
+        cada segundo. La caída no se detecta por un mensaje: se detecta por el silencio.
+      </figcaption>
+    </figure>
+  </section>
+
+  <!-- ======================================= por qué separar -->
+  <section class="band">
+    <div class="prose">
+      <h2>Por qué cuatro procesos y no uno</h2>
+      <p>
+        El sistema tiene tres cargas con formas incompatibles. Meterlas en un solo
+        runtime obliga a elegir el peor compromiso para dos de las tres.
+      </p>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <caption>Las tres cargas de trabajo</caption>
+        <thead>
+          <tr><th scope="col">Carga</th><th scope="col">Frecuencia</th><th scope="col">Naturaleza</th><th scope="col">Dónde vive</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Leer sensores del SO</td>
+            <td>cada 5 s por host</td>
+            <td>acceso al sistema, multiplataforma</td>
+            <td><code>agent-java/</code></td>
+          </tr>
+          <tr>
+            <td>Evaluar reglas y difundir</td>
+            <td>cientos de eventos/s</td>
+            <td>flujo, muchas conexiones abiertas</td>
+            <td><code>realtime-node/</code></td>
+          </tr>
+          <tr>
+            <td>Login, catálogo, preferencias</td>
+            <td>decenas de peticiones/min</td>
+            <td>CRUD transaccional</td>
+            <td><code>api-php/</code></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="prose">
+      Separadas, cada una usa la herramienta que le corresponde y escalan por su cuenta:
+      si entran trescientos servidores nuevos se replica el gateway, no el panel.
+    </p>
+  </section>
+
+  <!-- ================================================== Java -->
+  <section class="tech">
+    <div class="tech-head">
+      <p class="eyebrow">Java 17 · sin dependencias</p>
+      <h2>El agente en cada servidor</h2>
+      <p class="role">Mide, firma y envía. Nada más.</p>
+    </div>
+    <div class="tech-body">
+      <div>
+        <h3>Por qué</h3>
+        <p>
+          Es el único lenguaje de la pila que corre igual en Linux, Windows y macOS con
+          <strong>un solo artefacto compilado</strong>, que es exactamente el requisito de
+          una flota mixta. <code>OperatingSystemMXBean</code> entrega CPU, memoria física,
+          swap y carga del sistema con la misma llamada en los tres. La JVM ya trae HTTP
+          y criptografía, así que el agente no baja una sola librería: se instala en
+          máquinas ajenas y cada dependencia sería superficie de ataque y parcheo ajeno.
+        </p>
+      </div>
+      <div>
+        <h3>Cómo se usó</h3>
+        <ul>
+          <li>
+            <code>Agent.java</code> — bucle de un solo hilo, firma HMAC-SHA256 de cada
+            muestra y <strong>cola local de 500 entradas</strong> que retiene lo que no se
+            pudo entregar. Un agente que pierde datos durante un corte no sirve para
+            investigar ese corte.
+          </li>
+          <li>
+            <code>Collector.java</code> — lo que la JVM sabe va por JMX; lo que no
+            (temperatura, servicios, logs de autenticación) tiene una rama por sistema:
+            <code>systemctl</code> y <code>/sys/class/thermal</code>, <code>sc query</code>
+            y WMI, <code>launchctl</code>.
+          </li>
+          <li>
+            <code>Json.java</code> — noventa líneas de serializador propio, por la misma
+            razón que no hay dependencias.
+          </li>
+        </ul>
+      </div>
+      <p class="callout">
+        El JSON de salida es idéntico en los tres sistemas operativos. Ni el gateway ni
+        el frontend saben nunca en qué SO corre cada agente.
+      </p>
+    </div>
+  </section>
+
+  <!-- ================================================== Node -->
+  <section class="tech">
+    <div class="tech-head">
+      <p class="eyebrow">Node 22+ · TypeScript · ws</p>
+      <h2>El gateway de tiempo real</h2>
+      <p class="role">Ingesta, motor de alertas y difusión.</p>
+    </div>
+    <div class="tech-body">
+      <div>
+        <h3>Por qué</h3>
+        <p>
+          Resuelve dos cosas que PHP hace mal. Primero, <strong>miles de conexiones
+          abiertas durante horas</strong>: el modelo de PHP termina el proceso al
+          responder, el bucle de eventos de Node sostiene los WebSockets con memoria casi
+          plana. Segundo, <strong>estado entre muestras</strong>: el motor recuerda desde
+          cuándo se cumple una condición, para no gritar por un pico de un segundo, y qué
+          alertas ya avisó. Eso es memoria viva entre peticiones, algo que PHP no tiene
+          sin meter Redis de por medio.
+        </p>
+      </div>
+      <div>
+        <h3>Cómo se usó</h3>
+        <ul>
+          <li>
+            <code>index.ts</code> — <code>/ingest</code> verifica la firma con
+            <code>timingSafeEqual</code>, no con <code>===</code>.
+          </li>
+          <li>
+            <code>hub.ts</code> — el <em>upgrade</em> del WebSocket solo se acepta si el
+            token del panel es válido en PHP. Guarda 60 muestras por servidor para que un
+            cliente recién conectado vea la gráfica completa desde el primer frame.
+          </li>
+          <li>
+            <code>alerts.ts</code> — umbrales con histéresis, servicio caído, paso a UPS,
+            puertos fuera de línea base e intentos de acceso fallidos. Las caídas se
+            detectan por silencio, en un temporizador: un servidor apagado justamente
+            deja de enviar datos.
+          </li>
+          <li>
+            <code>simulator.ts</code> — seis agentes falsos que firman con el mismo HMAC.
+            El gateway no los distingue de agentes reales, que es la prueba de que el
+            contrato está bien definido.
+          </li>
+        </ul>
+      </div>
+      <p class="callout">
+        <strong>TypeScript no es cosmético.</strong> El agente escribe un JSON de treinta
+        campos anidados que atraviesa tres procesos. <code>shared/types.ts</code> es la
+        única definición de ese contrato y la comparten gateway y navegador: si se renombra
+        <code>mem_used_mb</code>, el compilador señala los dos lados. En JavaScript plano
+        eso sale en producción como <code>undefined</code> en una gráfica.
+      </p>
+      <p>
+        Node 22+ ejecuta <code>.ts</code> directamente, así que el gateway
+        <strong>no tiene paso de compilación</strong>: <code>node src/index.ts</code> y
+        listo. Por eso el <code>tsconfig</code> activa <code>erasableSyntaxOnly</code> y el
+        código evita <code>enum</code> y propiedades de constructor.
+      </p>
+    </div>
+  </section>
+
+  <!-- =================================================== PHP -->
+  <section class="tech">
+    <div class="tech-head">
+      <p class="eyebrow">PHP 7.3+ · PDO · sin framework</p>
+      <h2>La API del panel</h2>
+      <p class="role">Identidad, 2FA, catálogo y preferencias.</p>
+    </div>
+    <div class="tech-body">
+      <div>
+        <h3>Por qué</h3>
+        <p>
+          Aquí PHP sigue siendo la opción sensata: CRUD transaccional, sesiones y un
+          despliegue que consiste en copiar archivos. Trae de fábrica justo lo que
+          importa — <code>password_hash()</code> con sal automática,
+          <code>hash_equals()</code> para comparar en tiempo constante,
+          <code>hash_hmac()</code> y PDO con sentencias preparadas.
+        </p>
+      </div>
+      <div>
+        <h3>Cómo se usó</h3>
+        <ul>
+          <li>
+            <strong>Sin framework.</strong> Quince endpoints no ganan nada cargando
+            Laravel; se pierde legibilidad y tiempo de arranque.
+          </li>
+          <li>
+            <code>Auth.php</code> — login en dos pasos. El primer token nace en estado
+            <code>pending_2fa</code> y <strong>no abre ningún dato</strong>. Bloqueo a los
+            cinco intentos, y <code>password_verify</code> se ejecuta incluso cuando el
+            usuario no existe, para que el tiempo de respuesta no revele qué
+            identificadores son válidos.
+          </li>
+          <li>
+            <code>Totp.php</code> — RFC 6238 a mano, ciento diez líneas, sin Composer.
+            Compatible con Google Authenticator, Authy y las claves de verificación de iOS.
+          </li>
+          <li>
+            <code>Db.php</code> — PDO sobre SQLite. Nada del SQL es propietario: pasar a
+            MySQL o PostgreSQL es cambiar el DSN.
+          </li>
+        </ul>
+      </div>
+      <p class="callout">
+        <strong>La decisión de las IP.</strong> Cuando el usuario oculta una dirección, la
+        API devuelve <code>ip_private: null</code>. No se enmascara en el cliente, porque
+        enmascarar en el cliente es teatro: el dato seguiría en el JSON de la pestaña de red.
+      </p>
+    </div>
+  </section>
+
+  <!-- ================================================= React -->
+  <section class="tech">
+    <div class="tech-head">
+      <p class="eyebrow">React 19 · Bootstrap 5 · SVG</p>
+      <h2>La interfaz</h2>
+      <p class="role">Acceso, tablero de mosaicos e inventario.</p>
+    </div>
+    <div class="tech-body">
+      <div>
+        <h3>React 19, donde gana algo</h3>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th scope="col">Novedad</th><th scope="col">Dónde</th><th scope="col">Qué resuelve</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>useActionState</code></td>
+                <td>Login</td>
+                <td>El formulario es una función <code>async</code>; React gestiona pendiente, error y doble envío. Cero <code>useState</code> de «cargando».</td>
+              </tr>
+              <tr>
+                <td><code>useFormStatus</code></td>
+                <td>Botón de envío</td>
+                <td>El botón sabe solo si su formulario está enviando, sin recibir props.</td>
+              </tr>
+              <tr>
+                <td><code>useOptimistic</code></td>
+                <td>Mosaicos, IP</td>
+                <td>El mosaico se mueve y el ojo cambia en el mismo frame; si el guardado falla, React revierte.</td>
+              </tr>
+              <tr>
+                <td><code>use(Context)</code></td>
+                <td>Sesión</td>
+                <td>Lee el contexto sin <code>useContext</code> y sin las restricciones de los hooks clásicos.</td>
+              </tr>
+              <tr>
+                <td><code>&lt;title&gt;</code> en componente</td>
+                <td>Login, panel</td>
+                <td>React sube los metadatos al <code>&lt;head&gt;</code>; sobra <code>react-helmet</code>.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div>
+        <h3>El problema de rendimiento</h3>
+        <p>
+          Llegan hasta seis muestras por segundo. Si cada una hiciera <code>setState</code>
+          en la raíz, React recorrería el árbol completo doce veces por segundo y la
+          interfaz se arrastraría. La solución está en <code>useStream.ts</code>: un store
+          externo con <code>useSyncExternalStore</code> y suscripciones por clave. Un dato
+          nuevo de <code>srv-db-01</code> re-renderiza el mosaico de <code>srv-db-01</code>
+          y nada más.
+        </p>
+      </div>
+
+      <div>
+        <h3>Bootstrap, sin pelearse con él</h3>
+        <p>
+          El tablero se apoya en la rejilla de doce columnas: cada mosaico declara su ancho
+          y el navegador hace el reflujo, incluido el responsive. Eso ahorra una librería
+          de <em>dashboard grid</em> entera, y viene resuelto lo aburrido y fácil de hacer
+          mal: foco visible, contraste de formularios, tablas responsivas.
+        </p>
+        <p>
+          La personalización <strong>no sobreescribe las clases de Bootstrap</strong>:
+          redefine sus variables (<code>--bs-body-bg</code>, <code>--bs-primary</code>,
+          <code>--bs-border-radius</code>) y añade las del proyecto. Actualizar Bootstrap no
+          rompe el tema. De su JavaScript solo se carga el menú desplegable; el panel
+          lateral lo controla React, porque mezclar los dos sistemas de estado termina en
+          paneles que no se cierran.
+        </p>
+      </div>
+
+      <p class="callout">
+        Las gráficas son SVG escrito a mano: un medidor y una serie temporal son unas
+        cuarenta líneas cada uno. Chart.js sumaría 200 kB y un <code>&lt;canvas&gt;</code>
+        que hay que redibujar en pantallas Retina y en cada cambio de tamaño.
+      </p>
+    </div>
+  </section>
+
+  <!-- ============================================== seguridad -->
+  <section class="band">
+    <div class="prose">
+      <h2>Qué defiende el prototipo</h2>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th scope="col">Riesgo</th><th scope="col">Medida</th><th scope="col">Dónde</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Agente suplantado</td>
+            <td>HMAC-SHA256 del cuerpo, secreto por servidor, comparación en tiempo constante</td>
+            <td><code>Agent.java</code> · <code>index.ts</code></td>
+          </tr>
+          <tr>
+            <td>Fuerza bruta al login</td>
+            <td>Bloqueo a los cinco intentos y respuesta de duración constante</td>
+            <td><code>Auth.php</code></td>
+          </tr>
+          <tr>
+            <td>Token del primer paso</td>
+            <td>El estado <code>pending_2fa</code> no autoriza ninguna lectura</td>
+            <td><code>Auth.php</code></td>
+          </tr>
+          <tr>
+            <td>Inyección SQL</td>
+            <td>Sentencias preparadas en todas las consultas</td>
+            <td><code>Db.php</code></td>
+          </tr>
+          <tr>
+            <td>Fuga de direcciones IP</td>
+            <td>El backend no envía la dirección cuando está oculta</td>
+            <td><code>index.php</code></td>
+          </tr>
+          <tr>
+            <td>WebSocket abierto</td>
+            <td>El <em>upgrade</em> valida el token contra <code>/api/me</code></td>
+            <td><code>hub.ts</code></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="prose">
+      Las alertas que el motor emite se clasifican en tres niveles, y ese mismo semáforo
+      es el que colorea la flota en el tablero:
+      <span class="chip ok">ok</span>
+      <span class="chip warn">aviso</span>
+      <span class="chip crit">crítica</span>
+    </p>
+  </section>
+
+  <!-- ============================================= verificado -->
+  <section class="band">
+    <div class="prose">
+      <h2>Qué se probó de verdad</h2>
+      <p>
+        El prototipo se ejecutó de punta a punta con seis agentes simulados emitiendo cada
+        dos segundos. Estas cifras salieron de esa corrida, no de una estimación.
+      </p>
+    </div>
+    <div class="checks">
+      <div class="check">
+        <span class="num">401</span>
+        <span class="what">Respuesta de <code>/api/servers</code> con el token del primer paso, antes de validar el código TOTP.</span>
+      </div>
+      <div class="check">
+        <span class="num">17 s</span>
+        <span class="what">Desde que se detuvieron los agentes hasta la alerta de falta de latido en los seis servidores.</span>
+      </div>
+      <div class="check">
+        <span class="num">86 kB</span>
+        <span class="what">JavaScript de producción comprimido, con React 19 y Bootstrap completos dentro.</span>
+      </div>
+      <div class="check">
+        <span class="num">6</span>
+        <span class="what">Tipos de alerta disparados en vivo: CPU, memoria, servicio detenido, temperatura, fuerza bruta y apagón con UPS.</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================================================= brechas -->
+  <section class="band">
+    <div class="prose">
+      <h2>Lo que todavía no es</h2>
+      <p>
+        Un prototipo honesto declara sus huecos. Ninguno de estos es difícil; simplemente
+        no está hecho.
+      </p>
+    </div>
+    <ul class="gaps">
+      <li>
+        <span class="tag">TLS</span>
+        <span>Todo va en claro. En producción, nginx con certificados y el token de sesión en una cookie <code>HttpOnly; Secure; SameSite=Strict</code> en vez de <code>sessionStorage</code>.</span>
+      </li>
+      <li>
+        <span class="tag">Histórico</span>
+        <span>El gateway guarda sesenta muestras en memoria. Para gráficas de días hace falta una base de series temporales alimentada desde el mismo <code>/ingest</code>.</span>
+      </li>
+      <li>
+        <span class="tag">Móvil</span>
+        <span>La interfaz es responsiva y el registro de dispositivos ya existe, pero falta el envío real a APNs y FCM.</span>
+      </li>
+      <li>
+        <span class="tag">Demo</span>
+        <span>El endpoint <code>/api/demo/totp</code> entrega el segundo factor a quien lo pida. Solo existe si está el archivo <code>api-php/data/DEMO</code>; hay que borrarlo antes de cualquier despliegue.</span>
+      </li>
+      <li>
+        <span class="tag">Java</span>
+        <span>El agente está escrito y revisado, pero no se compiló: la máquina de desarrollo no tenía JDK. El simulador cubre su lugar en la demo.</span>
+      </li>
+    </ul>
+  </section>
+
+  <footer>
+    <span>Sentinela · prototipo</span>
+    <span>agent-java · realtime-node · api-php · frontend</span>
+    <span>Documento de decisiones de arquitectura</span>
+  </footer>
+
+</div>

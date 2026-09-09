@@ -1,0 +1,10 @@
+# Normaliza finales de linea: el repo guarda LF, cada clon usa lo suyo.
+* text=auto eol=lf
+
+# Scripts que dependen del final de linea
+*.ps1 text eol=crlf
+*.sh  text eol=lf
+
+# Binarios
+*.png binary
+*.woff2 binary

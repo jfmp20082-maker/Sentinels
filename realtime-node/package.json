@@ -1,0 +1,21 @@
+{
+  "name": "sentinela-realtime",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Gateway de tiempo real: ingesta de agentes, motor de alertas y fan-out WebSocket",
+  "scripts": {
+    "dev": "node --experimental-strip-types --watch src/index.ts",
+    "start": "node --experimental-strip-types src/index.ts",
+    "simulate": "node --experimental-strip-types src/simulator.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "ws": "^8.18.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "@types/ws": "^8.5.13",
+    "typescript": "^5.7.2"
+  }
+}

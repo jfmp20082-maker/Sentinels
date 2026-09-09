@@ -1,0 +1,28 @@
+# Dependencias
+node_modules/
+
+# Compilados
+dist/
+out/
+*.class
+.vite/
+
+# Datos locales: la base se regenera con `php sql/seed.php`
+api-php/data/*.sqlite
+api-php/data/*.sqlite-wal
+api-php/data/*.sqlite-shm
+
+# Activa el endpoint /api/demo/totp, que entrega el segundo factor.
+# Nunca debe existir fuera de una demo local.
+api-php/data/DEMO
+!api-php/data/.gitkeep
+
+# Configuración con el secreto HMAC de cada agente
+agent-java/agent.properties
+
+# Entorno y ruido
+.env
+.env.*
+*.log
+.DS_Store
+Thumbs.db
