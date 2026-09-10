@@ -44,7 +44,7 @@ class Totp
     }
 
     /** URI otpauth:// para pintar el QR de alta en la app movil. */
-    public static function provisioningUri($secret, $account, $issuer = 'Sentinela')
+    public static function provisioningUri($secret, $account, $issuer = 'Novara')
     {
         return 'otpauth://totp/' . rawurlencode($issuer . ':' . $account)
             . '?secret=' . $secret

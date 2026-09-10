@@ -1,0 +1,38 @@
+{
+  "name": "Sentinela",
+  // PHP 8.3 de base porque es la pieza mas incomoda de instalar; Node y Java
+  // entran como features encima. El agente Java necesita JDK 17.
+  "image": "mcr.microsoft.com/devcontainers/php:1-8.3-bookworm",
+  "features": {
+    "ghcr.io/devcontainers/features/node:1": { "version": "22" },
+    "ghcr.io/devcontainers/features/java:1": { "version": "17" }
+  },
+
+  // Solo 5173 necesita ser publico: Vite hace de proxy hacia 8080 y 8081
+  // dentro del contenedor, asi que el navegador ve un unico origen.
+  "forwardPorts": [5173, 8080, 8081],
+  "portsAttributes": {
+    "5173": { "label": "Sentinela - interfaz", "onAutoForward": "openPreview" },
+    "8080": { "label": "API PHP", "onAutoForward": "silent" },
+    "8081": { "label": "Gateway tiempo real", "onAutoForward": "silent" }
+  },
+
+  "postCreateCommand": "bash .devcontainer/setup.sh",
+  "postAttachCommand": "bash .devcontainer/start.sh",
+
+  "remoteEnv": {
+    // El servidor embebido de PHP es monoproceso: con un solo worker, la
+    // llamada del gateway a /api/me bloquea las peticiones del navegador.
+    "PHP_CLI_SERVER_WORKERS": "4"
+  },
+
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "bmewburn.vscode-intelephense-client",
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode"
+      ]
+    }
+  }
+}

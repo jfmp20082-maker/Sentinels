@@ -1,34 +1,34 @@
--- Esquema del panel. SQLite en el prototipo; MySQL/PostgreSQL en produccion
--- (solo cambia el DSN: no se usa SQL propietario).
+-- Esquema para PostgreSQL / Supabase. Mismas tablas y columnas que schema.sql,
+-- con los tipos de Postgres. Las fechas siguen siendo epoch (BIGINT) y los
+-- booleanos siguen siendo 0/1 (INTEGER), para no tocar ni una linea de PHP.
+-- Db::migrate() elige este fichero cuando el DSN es pgsql.
 
 CREATE TABLE IF NOT EXISTS users (
-  id            TEXT PRIMARY KEY,            -- identificador unico: SNT-4417
+  id            TEXT PRIMARY KEY,
   name          TEXT NOT NULL,
   email         TEXT NOT NULL UNIQUE,
-  password_hash TEXT NOT NULL,               -- password_hash(), Argon2id/bcrypt
-  totp_secret   TEXT,                        -- base32; NULL = 2FA no activado
+  password_hash TEXT NOT NULL,
+  totp_secret   TEXT,
   role          TEXT NOT NULL DEFAULT 'viewer',
   failed_tries  INTEGER NOT NULL DEFAULT 0,
-  locked_until  INTEGER NOT NULL DEFAULT 0,
-  created_at    INTEGER NOT NULL
+  locked_until  BIGINT  NOT NULL DEFAULT 0,
+  created_at    BIGINT  NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS sessions (
   token       TEXT PRIMARY KEY,
   user_id     TEXT NOT NULL REFERENCES users(id),
-  stage       TEXT NOT NULL,                 -- 'pending_2fa' | 'active'
+  stage       TEXT NOT NULL,
   ip          TEXT,
   user_agent  TEXT,
-  created_at  INTEGER NOT NULL,
-  expires_at  INTEGER NOT NULL
+  created_at  BIGINT NOT NULL,
+  expires_at  BIGINT NOT NULL
 );
 
--- Codigo de un solo uso enviado al correo para el segundo factor (modo real).
--- Vive atado al token de sesion 'pending_2fa'; caduca a los pocos minutos.
 CREATE TABLE IF NOT EXISTS login_codes (
   token       TEXT PRIMARY KEY REFERENCES sessions(token),
-  code_hash   TEXT NOT NULL,               -- password_hash del codigo de 6 digitos
-  expires_at  INTEGER NOT NULL,
+  code_hash   TEXT NOT NULL,
+  expires_at  BIGINT NOT NULL,
   tries       INTEGER NOT NULL DEFAULT 0
 );
 
@@ -41,11 +41,11 @@ CREATE TABLE IF NOT EXISTS servers (
   location      TEXT NOT NULL,
   ip_private    TEXT NOT NULL,
   ip_public     TEXT,
-  ip_visible    INTEGER NOT NULL DEFAULT 0,  -- el usuario decide si se muestran
+  ip_visible    INTEGER NOT NULL DEFAULT 0,
   tags          TEXT NOT NULL DEFAULT '[]',
   agent_version TEXT NOT NULL DEFAULT '-',
-  agent_secret  TEXT NOT NULL,               -- HMAC compartido con el agente Java
-  last_seen     INTEGER,
+  agent_secret  TEXT NOT NULL,
+  last_seen     BIGINT,
   status        TEXT NOT NULL DEFAULT 'offline'
 );
 
@@ -73,15 +73,14 @@ CREATE TABLE IF NOT EXISTS tiles (
 
 CREATE TABLE IF NOT EXISTS alert_rules (
   id        TEXT PRIMARY KEY,
-  -- '*' = regla global de la organizacion; por eso no hay clave foranea aqui.
   user_id   TEXT NOT NULL,
-  server_id TEXT,                            -- NULL = aplica a toda la flota
-  metric    TEXT NOT NULL,                   -- cpu_pct, mem_pct, disk_pct, temp_c...
+  server_id TEXT,
+  metric    TEXT NOT NULL,
   op        TEXT NOT NULL DEFAULT '>',
-  threshold REAL NOT NULL,
-  for_s     INTEGER NOT NULL DEFAULT 60,     -- histeresis: evita alertas por picos
+  threshold DOUBLE PRECISION NOT NULL,
+  for_s     INTEGER NOT NULL DEFAULT 60,
   severity  TEXT NOT NULL DEFAULT 'warning',
-  channels  TEXT NOT NULL DEFAULT '["lan"]', -- lan | push | email
+  channels  TEXT NOT NULL DEFAULT '["lan"]',
   enabled   INTEGER NOT NULL DEFAULT 1
 );
 
@@ -92,26 +91,26 @@ CREATE TABLE IF NOT EXISTS alerts (
   kind         TEXT NOT NULL,
   metric       TEXT NOT NULL,
   message      TEXT NOT NULL,
-  value        REAL,
-  threshold    REAL,
-  ts           INTEGER NOT NULL,
+  value        DOUBLE PRECISION,
+  threshold    DOUBLE PRECISION,
+  ts           BIGINT NOT NULL,
   acknowledged INTEGER NOT NULL DEFAULT 0
 );
 
 CREATE TABLE IF NOT EXISTS push_devices (
-  token      TEXT PRIMARY KEY,               -- APNs / FCM
+  token      TEXT PRIMARY KEY,
   user_id    TEXT NOT NULL REFERENCES users(id),
-  platform   TEXT NOT NULL,                  -- ios | android
-  created_at INTEGER NOT NULL
+  platform   TEXT NOT NULL,
+  created_at BIGINT NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS audit_log (
-  id      INTEGER PRIMARY KEY AUTOINCREMENT,
+  id      BIGSERIAL PRIMARY KEY,
   user_id TEXT,
   action  TEXT NOT NULL,
   detail  TEXT,
   ip      TEXT,
-  ts      INTEGER NOT NULL
+  ts      BIGINT NOT NULL
 );
 
 CREATE INDEX IF NOT EXISTS idx_alerts_ts ON alerts(ts DESC);

@@ -74,6 +74,57 @@ entrega el segundo factor a quien lo pida.
 Con un autenticador real (Google Authenticator, Authy, Contraseñas de iOS) el
 secreto de la demo es `JBSWY3DPEHPK3PXPJBSWY3DPEHPK3PXP`.
 
+## Verlo desde GitHub
+
+GitHub Pages solo sirve ficheros estáticos: no ejecuta PHP, no mantiene vivo el
+gateway Node y no acepta WebSockets. De ahí dos caminos, que dan cosas
+distintas.
+
+### Codespaces — el sistema real
+
+`.devcontainer/` levanta las cuatro piezas dentro de un contenedor de GitHub con
+PHP 8.3, Node 22 y JDK 17. Al crear el codespace se instalan las dependencias y
+se siembra la base; al conectarte, `.devcontainer/start.sh` arranca los cuatro
+procesos en segundo plano.
+
+En la pestaña **PORTS**, abrir el 5173. Solo ese puerto necesita salir: Vite hace
+de proxy hacia el 8080 y el 8081 dentro del contenedor, así que el navegador ve
+un único origen. Para enseñárselo a alguien más, cambiar su visibilidad a
+*Public*.
+
+Registros en `/tmp/sentinela-*.log`; reiniciar con `bash .devcontainer/start.sh`.
+Es PHP de verdad, SQLite de verdad y WebSocket de verdad, y un agente Java real
+puede reportar contra él. Dura lo que dure el codespace encendido: se apaga solo
+a los 30 min de inactividad y la cuota gratuita es de 60 h al mes.
+
+### Pages — una maqueta navegable con enlace permanente
+
+`npm run build:demo` compila el frontend con el backend metido dentro del
+navegador. El generador de métricas (`realtime-node/src/fake-host.ts`) y el motor
+de alertas (`realtime-node/src/alerts.ts`) son los mismos módulos que ejecuta el
+gateway: lo único fingido es el transporte. La API PHP la sustituye un router de
+objetos sobre `localStorage`, en `frontend/src/demo/runtime.ts`.
+
+`.github/workflows/pages.yml` la publica, pero **solo si lo lanzas a mano** desde
+la pestaña *Actions*: un sitio de Pages es público aunque el repositorio sea
+privado, así que publicar no debería ser un efecto secundario de un `git push`.
+Antes hay que activarlo una vez en *Settings › Pages › Source: GitHub Actions*;
+mientras no lo hagas, no existe ningún sitio.
+
+Para verlo en local sin levantar PHP ni el gateway:
+
+```bash
+cd frontend && npm run dev:demo
+```
+
+Un panel flotante marca el modo demo y deja callar a los agentes, que es como se
+prueba la detección de caídas cuando no hay un simulador que matar.
+
+Lo que la maqueta no puede ser: la contraseña se compara en el cliente y el
+catálogo entero viaja en el bundle, así que ocultar una IP es coherencia de
+comportamiento y no un control de acceso; y ningún agente real puede reportar
+contra ella.
+
 ## Qué se puede probar
 
 - **Acceso en dos pasos.** El token del primer paso no sirve para leer datos:
@@ -89,10 +140,94 @@ secreto de la demo es `JBSWY3DPEHPK3PXPJBSWY3DPEHPK3PXP`.
   apagón con UPS en Core API 02.
 - **Caídas.** Al detener el simulador, en 15 s toda la flota pasa a `offline`
   con alerta de falta de latido.
+- **Incidentes a petición.** En modo demo (`npm run dev:demo`), el panel
+  flotante dispara cualquiera de los ocho incidentes al momento —pico de CPU,
+  memoria, disco, sobrecalentamiento, fuerza bruta, servicio detenido, apagón
+  con UPS, puerto inesperado— y calla a los agentes para provocar la caída.
+  Cada uno dice qué alerta debería salir y en cuántos segundos, así que sirve
+  para comprobar el motor, no solo para ver bonito el tablero.
 
-## Agente Java en una máquina real
+## Pruebas
 
-No hace falta el simulador si hay una máquina de verdad:
+```bash
+cd frontend && npm test
+```
+
+47 pruebas sobre lo que tiene lógica de verdad:
+
+| Fichero | Qué comprueba |
+|---|---|
+| `tests/alerts.test.ts` | El motor de alertas: histéresis, no repetir mientras dure, rearmarse al normalizar, métricas derivadas (MB a %, el disco más lleno), servicios caídos, apagones, puertos, detección de caídas y el estado consolidado del semáforo. |
+| `tests/totp.test.ts` | El TOTP contra los vectores del RFC 6238. Es la garantía de que el código del modo demo es el mismo que da PHP y el mismo que daría Google Authenticator. |
+| `tests/demo-api.test.ts` | El backend simulado: que el token del primer paso no lee nada, que un código equivocado no pasa, que ocultar una IP deja de enviarla, y que el tablero se guarda entero. |
+
+El motor de alertas es el único módulo que ejecutan las dos vidas del sistema
+—el gateway Node y el modo demo del navegador—, así que una regresión ahí las
+rompe a la vez. De ahí que sea lo más cubierto.
+
+`.github/workflows/ci.yml` corre esto en cada push, más los tipos, los dos
+builds del frontend, la sintaxis de PHP con la semilla contra SQLite, y la
+compilación del agente Java. No publica nada.
+
+Lo que las pruebas **no** cubren: la API PHP de verdad (solo se comprueba que
+la sintaxis es válida y que la semilla corre), el gateway como proceso —firma
+HMAC, WebSocket, reconexión— y la interfaz.
+
+## Modo real: el panel muestra ESTA máquina
+
+La demo del navegador inventa los datos. Para ver las métricas **reales** del
+equipo que ejecuta Novara, corre el stack completo con el agente Java, que las
+mide de verdad. En Windows, con un comando:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File run-real.ps1
+```
+
+Levanta las cuatro piezas (API PHP, gateway, agente Java, interfaz en modo
+normal), siembra la base con un único servidor que es este equipo (`srv-local`,
+etiquetado «Este equipo») y abre `http://127.0.0.1:5173`. Entras con `SNT-4417`
+/ `Sentinela#2026`.
+
+### Código de acceso por correo (segundo factor)
+
+En el modo real, el segundo factor **llega por correo**: al meter usuario y
+contraseña, el backend genera un código de 6 dígitos y lo envía a la dirección
+del usuario. Para que se envíe de verdad hay que configurar el envío:
+
+1. Copia `api-php/mail.local.php.example` a `api-php/mail.local.php`.
+2. Pon tu Gmail y una **contraseña de aplicación** de Google (Ajustes de la
+   cuenta → Seguridad → Contraseñas de aplicación; requiere verificación en 2
+   pasos activada). Ese archivo está en `.gitignore`, no se sube.
+
+Mientras **no** lo configures, el código no se pierde: aparece en la propia
+pantalla de acceso (etiqueta «modo desarrollo») y en
+`api-php/data/last-login-code.txt`, para poder probar el flujo sin enviar
+correos. En cuanto pones el Gmail, ese respaldo desaparece y el código solo
+llega a la bandeja. El correo destino es el del usuario en la base
+(`sql/seed-local.php`).
+
+Qué es real y qué no, por sistema operativo (lo que la máquina expone):
+
+| Métrica | Linux | Windows | macOS |
+|---|---|---|---|
+| CPU, memoria, swap, carga | sí | sí (carga 0) | sí |
+| Discos (uso) | sí | sí | sí |
+| Servicios vigilados | systemd | SCM (`sc query`) | launchd |
+| Intentos de intrusión | journald + fail2ban | eventos 4625 | no |
+| Puertos fuera de línea base | sí | sí | sí |
+| Red (kbps) | sí | no (0) | no |
+| Temperatura | sensores | WMI si existe | no |
+| Energía / UPS | batería + NUT | `Win32_Battery` | no |
+
+Lo que un sistema no expone se envía honestamente vacío (`temp_c: null`, red en
+0), no inventado. El agente y sus servicios vigilados se configuran en
+`agent-java/agent.properties`.
+
+### En otra máquina (no la local)
+
+El `run-real.ps1` usa un secreto de agente fijo por comodidad. En una máquina
+remota de verdad, cada agente lleva su propio secreto aleatorio (columna
+`agent_secret` de la tabla `servers`, que llena `sql/seed.php`):
 
 ```bash
 cd agent-java
@@ -101,9 +236,16 @@ cp agent.properties.example agent.properties   # poner server.id y agent.secret
 java -cp out mx.sentinela.agent.Agent agent.properties
 ```
 
-El `agent.secret` de cada servidor está en la columna `agent_secret` de la tabla
-`servers`. Detalles de empaquetado como servicio en
+Detalles de empaquetado como servicio en
 [agent-java/README.md](agent-java/README.md).
+
+## Base de datos y Supabase
+
+Por defecto la base es un archivo SQLite en `api-php/data/sentinela.sqlite`
+(esquema en `sql/schema.sql`). El backend es agnóstico del motor: `Db.php` lee
+`SENTINELA_DSN`, así que el mismo código corre contra PostgreSQL/Supabase
+cambiando esa variable. Guía paso a paso (incluye habilitar `pdo_pgsql` y el
+script de copia de datos) en [docs/SUPABASE.md](docs/SUPABASE.md).
 
 ## Lo que este prototipo todavía no es
 
@@ -116,4 +258,7 @@ El `agent.secret` de cada servidor está en la columna `agent_secret` de la tabl
 - Sin app móvil nativa: la interfaz es responsiva y el registro de dispositivos
   para notificaciones (`POST /api/push/register`) ya existe, pero falta el
   envío real a APNs y FCM.
-- Sin pruebas automatizadas ni pipeline de despliegue.
+- Sin pruebas de la API PHP ni del gateway como proceso: lo cubierto es el
+  motor de alertas, el TOTP y el backend simulado (ver *Pruebas*).
+- Sin despliegue del sistema real. El único workflow que publica algo sube la
+  maqueta estática a Pages, y hay que lanzarlo a mano.

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import type { Alert, MetricSample, ServerStatus, WsMessage } from '../../../shared/types';
-import { getToken } from './api';
+import { getToken, MODO_DEMO } from './api';
 
 /**
  * Store del tiempo real.
@@ -141,6 +141,23 @@ export function useStreamConnection(enabled: boolean): ConnState {
 
   useEffect(() => {
     if (!enabled) return;
+
+    // Sin backend no hay WebSocket que abrir: la simulacion corre en esta
+    // misma pestaña y empuja los mensajes directamente al store.
+    if (MODO_DEMO) {
+      let vivo = true;
+      const runtime = import('../demo/runtime');
+      void runtime.then(({ iniciar }) => {
+        if (!vivo) return;
+        iniciar((msg) => stream.ingest(msg));
+        setState('en vivo');
+      });
+      return () => {
+        vivo = false;
+        void runtime.then(({ detener }) => detener());
+      };
+    }
+
     let ws: WebSocket | null = null;
     let timer: number | undefined;
     let cancelled = false;

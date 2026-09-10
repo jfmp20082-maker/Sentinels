@@ -26,3 +26,7 @@ agent-java/agent.properties
 *.log
 .DS_Store
 Thumbs.db
+
+# Correo: config local con la contrasena de aplicacion
+api-php/mail.local.php
+api-php/data/last-login-code.txt

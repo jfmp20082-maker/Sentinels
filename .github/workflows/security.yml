@@ -1,0 +1,106 @@
+name: Analisis de seguridad (Strix)
+
+# Strix lanza agentes que intentan explotar de verdad lo que encuentran y solo
+# reportan lo que consiguieron demostrar con una prueba de concepto. Necesita
+# Docker y una clave de LLM; los runners de GitHub ya traen Docker, asi que lo
+# unico que hay que poner son dos secretos del repositorio:
+#
+#   STRIX_LLM     id del modelo, por ejemplo  anthropic/claude-sonnet-5
+#   LLM_API_KEY   la clave del proveedor
+#
+# Settings > Secrets and variables > Actions > New repository secret.
+#
+# Dos formas de usarlo:
+#   - En cada pull request analiza SOLO lo que cambia (rapido, sirve de puerta).
+#   - A mano desde Actions > Run workflow, con el arbol entero y mas profundidad.
+
+on:
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      profundidad:
+        description: 'quick (minutos) / standard (~30 min) / deep (horas)'
+        type: choice
+        options: [quick, standard, deep]
+        default: standard
+      presupuesto:
+        description: 'Tope de gasto en LLM, en dolares'
+        default: '15'
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  strix:
+    name: Buscar vulnerabilidades explotables
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Sin el historial completo no se puede resolver el diff del PR y el
+          # analisis acabaria mirando menos codigo del que cambio.
+          fetch-depth: 0
+
+      - name: Instalar Strix
+        run: curl -sSL https://strix.ai/install | bash
+
+      # En un PR, Strix se limita solo a los ficheros que cambian. Lanzado a
+      # mano, se le pide el arbol completo: es el analisis que de verdad cubre
+      # la API PHP, el gateway y el agente Java de una sentada.
+      - name: Analizar el diff del pull request
+        if: github.event_name == 'pull_request'
+        env:
+          STRIX_LLM: ${{ secrets.STRIX_LLM }}
+          LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
+        run: strix -n -t ./ --scan-mode quick --diff-base origin/${{ github.base_ref }} --max-budget 10
+
+      - name: Analizar el repositorio completo
+        if: github.event_name == 'workflow_dispatch'
+        env:
+          STRIX_LLM: ${{ secrets.STRIX_LLM }}
+          LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
+        run: |
+          strix -n -t ./ \
+            --scan-mode ${{ inputs.profundidad }} \
+            --scope-mode full \
+            --max-budget ${{ inputs.presupuesto }} \
+            --instruction "Prototipo de monitoreo de servidores en cuatro piezas. api-php: sesiones con token Bearer, TOTP, endpoints /internal/* protegidos por un token de servicio compartido. realtime-node: ingesta /ingest firmada con HMAC-SHA256 por servidor y WebSocket /stream que valida la sesion contra PHP. frontend: React. Interesan sobre todo el salto del token de primer paso (pending_2fa) a lectura de datos, la autorizacion por rol en PATCH /api/servers, la separacion entre usuarios en /api/tiles, la verificacion de firma en /ingest y la autenticacion del WebSocket. Credenciales de prueba de la semilla: SNT-4417 / Sentinela#2026 con TOTP JBSWY3DPEHPK3PXPJBSWY3DPEHPK3PXP, y SNT-9002 / Noc#2026 con rol operator y sin segundo factor."
+
+      # El informe siempre, haya hallazgos o no: es lo que se lee despues.
+      - name: Guardar el informe
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: strix-${{ github.run_id }}
+          path: strix_runs/
+          if-no-files-found: warn
+
+      # Un analisis cortado por presupuesto sale con codigo 0 aunque no haya
+      # mirado todo. Sin esta comprobacion, quedarse sin saldo pareceria un
+      # aprobado.
+      - name: Exigir que el analisis terminara
+        if: always()
+        run: |
+          run_json=$(ls -t strix_runs/*/run.json 2>/dev/null | head -1)
+          if [ -z "$run_json" ]; then
+            echo "No hay run.json: el analisis no llego a arrancar." >&2
+            exit 1
+          fi
+          status=$(jq -r .status "$run_json")
+          coste=$(jq -r '.llm_usage.cost // 0' "$run_json")
+          echo "estado=$status  coste=$coste USD"
+          if [ "$status" != "completed" ]; then
+            echo "El analisis no termino (probablemente agoto el presupuesto). Sube el tope." >&2
+            exit 1
+          fi
+
+      # Falla en repos privados sin GitHub Advanced Security, que es una
+      # limitacion de plan y no un problema del analisis: el informe ya quedo
+      # guardado como artefacto en el paso anterior.
+      - name: Subir SARIF al escaneo de codigo
+        if: always()
+        continue-on-error: true
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: strix_runs

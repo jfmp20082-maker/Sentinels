@@ -4,6 +4,9 @@
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "module": "ESNext",
     "moduleResolution": "bundler",
+    // El motor de alertas y el simulador viven en realtime-node/ y se importan
+    // con extension .ts explicita; el bundler los resuelve, tsc no emite nada.
+    "allowImportingTsExtensions": true,
     "jsx": "react-jsx",
     "strict": true,
     "noUnusedLocals": true,
@@ -15,5 +18,5 @@
     "noEmit": true,
     "types": ["vite/client"]
   },
-  "include": ["src", "../shared"]
+  "include": ["src", "tests", "../shared"]
 }

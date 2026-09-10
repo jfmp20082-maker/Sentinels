@@ -4,6 +4,12 @@
 set -euo pipefail
 cd "$(dirname "$0")"
 
+# El codigo ya no trae un token de servicio por defecto (fallaria abriendo los
+# endpoints internos). Lo fija aqui el lanzador local, un valor de desarrollo
+# que las tres piezas comparten. No viaja a ningun despliegue: eso lo pone el
+# operador, distinto, en su entorno.
+export SENTINELA_SERVICE_TOKEN="${SENTINELA_SERVICE_TOKEN:-dev-local-$(date +%s)}"
+
 limpiar() { kill 0 2>/dev/null || true; }
 trap limpiar EXIT INT TERM
 

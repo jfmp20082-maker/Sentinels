@@ -1,6 +1,6 @@
 <?php
 /**
- * Sentinela - API de panel (PHP).
+ * Novara - API de panel (PHP).
  * Responsabilidad: identidad, 2FA, catalogo de servidores, configuracion de
  * mosaicos, reglas de alerta e historico. NO toca el tiempo real: eso es del
  * gateway Node. Arrancar con:  php -S 127.0.0.1:8080 -t public
@@ -42,7 +42,17 @@ function requireUser()
 /** El gateway Node se autentica con un secreto de servicio, no con sesion. */
 function requireService()
 {
-    $expected = getenv('SENTINELA_SERVICE_TOKEN') ?: 'dev-service-token';
+    // Sin valor por defecto a proposito: un default funcional aqui filtraria los
+    // secretos HMAC de todos los agentes a quien conociera el valor del codigo.
+    // Si la variable no esta definida, los endpoints internos NO funcionan;
+    // asi un despliegue que la olvide falla en vez de quedar abierto. El
+    // servidor PHP procesa por peticion (no hay "arranque" donde abortar), asi
+    // que la negativa es 503 aqui y no una caida al inicio.
+    $expected = getenv('SENTINELA_SERVICE_TOKEN');
+    if ($expected === false || $expected === '') {
+        Http::json(array('error' => 'service_token_no_configurado'), 503);
+        exit;
+    }
     if (!hash_equals($expected, (string) Http::bearer())) {
         Http::json(array('error' => 'forbidden'), 403);
         exit;
@@ -87,8 +97,28 @@ $router->post('/api/auth/login', function () {
 
 $router->post('/api/auth/2fa', function () {
     $b = Http::body();
-    $res = Auth::verifyTotp((string) (isset($b['token']) ? $b['token'] : ''), (string) (isset($b['code']) ? $b['code'] : ''));
+    $res = Auth::verifyLoginCode((string) (isset($b['token']) ? $b['token'] : ''), (string) (isset($b['code']) ? $b['code'] : ''));
     return Http::json($res, isset($res['error']) ? 401 : 200);
+});
+
+/** Reenvia el codigo de acceso al correo del usuario del token intermedio. */
+$router->post('/api/auth/resend', function () {
+    $b = Http::body();
+    $res = Auth::resendLoginCode((string) (isset($b['token']) ? $b['token'] : ''));
+    return Http::json($res, isset($res['error']) ? 401 : 200);
+});
+
+/**
+ * SOLO respaldo de desarrollo. Devuelve el ultimo codigo de acceso cuando NO
+ * hay SMTP configurado, para poder probar el login sin enviar correos. En
+ * cuanto configuras Gmail deja de existir: el codigo solo va al correo.
+ */
+$router->get('/api/dev/last-code', function () {
+    if (Mailer::configured()) {
+        return Http::json(array('error' => 'not_found'), 404);
+    }
+    $code = Auth::lastDevCode();
+    return $code ? Http::json(array('code' => $code)) : Http::json(array('error' => 'sin_codigo'), 404);
 });
 
 $router->post('/api/auth/logout', function () {
@@ -264,10 +294,12 @@ $router->get('/api/alert-rules', function () {
 $router->post('/api/push/register', function () {
     $user = requireUser();
     $b = Http::body();
-    Db::run(
-        'INSERT OR REPLACE INTO push_devices (token, user_id, platform, created_at) VALUES (?,?,?,?)',
-        array((string) (isset($b['token']) ? $b['token'] : ''), $user['id'], (string) (isset($b['platform']) ? $b['platform'] : 'ios'), time())
-    );
+    Db::upsert('push_devices', array(
+        'token' => (string) (isset($b['token']) ? $b['token'] : ''),
+        'user_id' => $user['id'],
+        'platform' => (string) (isset($b['platform']) ? $b['platform'] : 'ios'),
+        'created_at' => time(),
+    ), array('token'));
     return Http::json(array('ok' => true));
 });
 
@@ -295,17 +327,18 @@ $router->post('/internal/heartbeat', function () {
 $router->post('/internal/alerts', function () {
     requireService();
     $a = Http::body();
-    Db::run(
-        'INSERT OR REPLACE INTO alerts (id, server_id, severity, kind, metric, message, value, threshold, ts, acknowledged)
-         VALUES (?,?,?,?,?,?,?,?,?,0)',
-        array(
-            (string) $a['id'], (string) $a['server_id'], (string) $a['severity'], (string) $a['kind'],
-            (string) $a['metric'], (string) $a['message'],
-            isset($a['value']) ? $a['value'] : null,
-            isset($a['threshold']) ? $a['threshold'] : null,
-            (int) round(((float) $a['ts']) / 1000),
-        )
-    );
+    Db::upsert('alerts', array(
+        'id' => (string) $a['id'],
+        'server_id' => (string) $a['server_id'],
+        'severity' => (string) $a['severity'],
+        'kind' => (string) $a['kind'],
+        'metric' => (string) $a['metric'],
+        'message' => (string) $a['message'],
+        'value' => isset($a['value']) ? $a['value'] : null,
+        'threshold' => isset($a['threshold']) ? $a['threshold'] : null,
+        'ts' => (int) round(((float) $a['ts']) / 1000),
+        'acknowledged' => 0,
+    ), array('id'));
     return Http::json(array('ok' => true));
 });
 

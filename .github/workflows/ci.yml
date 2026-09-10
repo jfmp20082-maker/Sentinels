@@ -1,0 +1,94 @@
+name: Comprobaciones
+
+# Esto NO publica nada. Solo verifica que el prototipo sigue compilando y que
+# el motor de alertas, el TOTP y el backend simulado se comportan como dicen.
+# Publicar la maqueta en Pages es un workflow aparte, y a mano.
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  frontend:
+    name: Interfaz y pruebas
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - run: npm ci
+        working-directory: frontend
+
+      - name: Tipos
+        run: npm run typecheck
+        working-directory: frontend
+
+      - name: Pruebas
+        run: npm test
+        working-directory: frontend
+
+      # Los dos builds, porque divergen: el normal habla con PHP, el de demo
+      # lleva el backend dentro. Que uno compile no dice nada del otro.
+      - name: Compilar interfaz
+        run: npm run build
+        working-directory: frontend
+
+      - name: Compilar maqueta
+        run: npm run build:demo
+        working-directory: frontend
+
+  gateway:
+    name: Gateway de tiempo real
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: realtime-node/package-lock.json
+
+      - run: npm ci
+        working-directory: realtime-node
+
+      - name: Tipos
+        run: npm run typecheck
+        working-directory: realtime-node
+
+  api:
+    name: API PHP
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: pdo_sqlite
+
+      # No hay pruebas de PHP todavia; al menos que la sintaxis sea valida y
+      # que la semilla corra de principio a fin contra SQLite.
+      - name: Sintaxis
+        run: find api-php -name '*.php' -print0 | xargs -0 -n1 php -l
+
+      - name: La semilla se ejecuta
+        run: php sql/seed.php
+        working-directory: api-php
+
+  agente:
+    name: Agente Java
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Compilar
+        run: javac -d out $(find src -name '*.java')
+        working-directory: agent-java

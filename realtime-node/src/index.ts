@@ -18,8 +18,16 @@ import type { Alert, MetricSample } from '../../shared/types.ts';
 
 const PORT = Number(process.env.SENTINELA_WS_PORT ?? 8081);
 const API = process.env.SENTINELA_API ?? 'http://127.0.0.1:8080';
-const SERVICE_TOKEN = process.env.SENTINELA_SERVICE_TOKEN ?? 'dev-service-token';
 const OUTAGE_MS = Number(process.env.SENTINELA_OUTAGE_MS ?? 15_000);
+
+// Sin valor por defecto: con este token el gateway lee de la API los secretos
+// HMAC de todos los agentes. Un default en el codigo seria una llave publicada.
+// Si falta, el gateway no arranca, en vez de correr con una clave conocida.
+const SERVICE_TOKEN = process.env.SENTINELA_SERVICE_TOKEN;
+if (!SERVICE_TOKEN) {
+  console.error('Falta SENTINELA_SERVICE_TOKEN. Definelo (mismo valor que la API PHP) antes de arrancar.');
+  process.exit(1);
+}
 
 interface FleetRow { id: string; label: string; hostname: string; agent_secret: string }
 

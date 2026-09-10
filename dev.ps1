@@ -1,6 +1,12 @@
 # Levanta las cuatro piezas del prototipo, cada una en su propia ventana.
 $raiz = $PSScriptRoot
 
+# El codigo ya no trae token de servicio por defecto. Lo fija el lanzador local
+# y las ventanas hijas lo heredan; en un despliegue lo pone el operador, otro.
+if (-not $env:SENTINELA_SERVICE_TOKEN) {
+  $env:SENTINELA_SERVICE_TOKEN = "dev-local-$([int](Get-Date -UFormat %s))"
+}
+
 Write-Host "==> Preparando la base de datos"
 Push-Location "$raiz\api-php"; php sql/seed.php; Pop-Location
 

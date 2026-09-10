@@ -5,6 +5,7 @@ import { stream, useAlertStream, useStreamConnection, type ConnState } from '../
 import { useSession } from '../context/Session';
 import { MosaicGrid } from '../components/MosaicGrid';
 import { TileEditor } from '../components/TileEditor';
+import { ThemeToggle } from '../components/ThemeToggle';
 import { Servers } from './Servers';
 
 /**
@@ -69,7 +70,7 @@ export function Dashboard() {
 
   return (
     <div className="app-shell">
-      <title>Sentinela · Panel</title>
+      <title>Novara · Panel</title>
 
       <TopBar
         conexion={conexion}
@@ -155,7 +156,7 @@ function TopBar(p: TopBarProps) {
       <div className="container-fluid gap-2">
         <span className="navbar-brand d-flex align-items-center gap-2 mb-0">
           <span className="brand-mark chico" aria-hidden="true"><i className="bi bi-shield-check" /></span>
-          <span className="fw-semibold">Sentinela</span>
+          <span className="fw-semibold">Novara</span>
         </span>
 
         <ul className="nav nav-pills nav-pills-sm d-none d-md-flex">
@@ -175,6 +176,9 @@ function TopBar(p: TopBarProps) {
           <span className={`small d-none d-sm-inline ${claseConexion}`} title="Estado del canal de tiempo real">
             <i className="bi bi-broadcast me-1" />{p.conexion}
           </span>
+
+          <ThemeToggle />
+
 
           <button className="btn btn-sm btn-outline-secondary position-relative" title="Alertas sin revisar">
             <i className="bi bi-bell" />

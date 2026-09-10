@@ -1,0 +1,66 @@
+name: Publicar demo en GitHub Pages
+
+# Pages solo sirve ficheros estaticos, asi que lo que se publica es el frontend
+# compilado con VITE_DEMO=1: los agentes, el motor de alertas y el catalogo
+# corren dentro del navegador. Es una maqueta navegable, no el sistema.
+#
+# SOLO MANUAL, a proposito. Un sitio de Pages es publico aunque el repositorio
+# sea privado, asi que publicar no debe ser un efecto secundario de un push:
+# hay que ir a Actions y lanzarlo a mano. Ademas no publica nada hasta activar
+# Settings > Pages > Source: GitHub Actions.
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Una publicacion a la vez; no se cancela la que ya esta en vuelo.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Instalar dependencias
+        working-directory: frontend
+        run: npm ci
+
+      - name: Compilar
+        working-directory: frontend
+        env:
+          # Pages publica en https://<usuario>.github.io/<repo>/, no en la raiz.
+          VITE_BASE: /${{ github.event.repository.name }}/
+        run: npm run build:demo
+
+      - name: Añadir la nota de arquitectura
+        run: |
+          cp docs/arquitectura.html frontend/dist/arquitectura.html
+          touch frontend/dist/.nojekyll
+
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: frontend/dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

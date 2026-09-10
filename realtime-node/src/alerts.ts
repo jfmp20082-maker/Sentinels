@@ -1,5 +1,10 @@
-import { randomUUID } from 'node:crypto';
 import type { Alert, MetricSample, Severity, ServerStatus } from '../../shared/types.ts';
+
+/**
+ * `crypto` global en vez de `node:crypto`: este motor lo ejecuta tambien el
+ * navegador en el modo demo de GitHub Pages, donde no hay modulos de Node.
+ */
+const randomUUID = () => globalThis.crypto.randomUUID();
 
 export interface Rule {
   id: string;

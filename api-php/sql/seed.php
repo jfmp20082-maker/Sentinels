@@ -8,7 +8,7 @@ require_once __DIR__ . '/../src/Totp.php';
 
 Db::migrate();
 $pdo = Db::conn();
-foreach (array('audit_log', 'push_devices', 'alerts', 'alert_rules', 'tiles', 'services', 'servers', 'sessions', 'users') as $t) {
+foreach (array('audit_log', 'push_devices', 'alerts', 'alert_rules', 'tiles', 'services', 'servers', 'login_codes', 'sessions', 'users') as $t) {
     $pdo->exec('DELETE FROM ' . $t);
 }
 
@@ -18,11 +18,17 @@ $userId = 'SNT-4417';
 $secret = 'JBSWY3DPEHPK3PXPJBSWY3DPEHPK3PXP';
 Db::run(
     'INSERT INTO users (id, name, email, password_hash, totp_secret, role, created_at) VALUES (?,?,?,?,?,?,?)',
-    array($userId, 'Julio Fernandez', 'admin@sentinela.mx', password_hash('Sentinela#2026', PASSWORD_DEFAULT), $secret, 'admin', $now)
+    array($userId, 'Juan Fernando', 'admin@sentinela.mx', password_hash('Sentinela#2026', PASSWORD_DEFAULT), $secret, 'admin', $now)
 );
 Db::run(
     'INSERT INTO users (id, name, email, password_hash, totp_secret, role, created_at) VALUES (?,?,?,?,?,?,?)',
     array('SNT-9002', 'Operador NOC', 'noc@sentinela.mx', password_hash('Noc#2026', PASSWORD_DEFAULT), null, 'operator', $now)
+);
+// Rol de solo lectura: existe para que el 403 de PATCH /api/servers sea un
+// camino que alguien recorre de verdad, no una rama de codigo sin ejercer.
+Db::run(
+    'INSERT INTO users (id, name, email, password_hash, totp_secret, role, created_at) VALUES (?,?,?,?,?,?,?)',
+    array('SNT-7003', 'Auditor Lectura', 'lectura@sentinela.mx', password_hash('Lectura#2026', PASSWORD_DEFAULT), null, 'viewer', $now)
 );
 
 $servers = array(

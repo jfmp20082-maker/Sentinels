@@ -6,52 +6,130 @@
  * gratis la rejilla, los formularios, los estados de foco y la accesibilidad,
  * y solo cambia la piel. Actualizar Bootstrap no rompe nada de esto.
  *
- * La tipografia usa la pila de sistema encabezada por -apple-system: en macOS
- * e iOS se ve con San Francisco, la fuente de las Human Interface Guidelines.
+ * La tipografia es Geist (texto) y Geist Mono (metricas), cargadas en
+ * index.html; la pila de sistema queda como respaldo si no cargan.
  */
 
+/*
+ * Piel Solvex (lenguaje de diseno solvex-design).
+ * Canvas casi negro, paneles carbon con bordes finos, un unico acento lima
+ * neon, metricas en Geist Mono y semaforo con la rampa de calor de Solvex.
+ * Todo sigue saliendo de estas variables: cambiar la piel es cambiar aqui.
+ */
 :root,
 [data-bs-theme='dark'] {
-  --bs-body-bg: #0b0f14;
-  --bs-body-color: #e6edf3;
-  --bs-body-font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI',
+  --bs-body-bg: #050506;
+  --bs-body-color: #f5f6f7;
+  --bs-body-font-family: 'Geist', 'Manrope', system-ui, -apple-system, 'Segoe UI',
     Roboto, 'Helvetica Neue', Arial, sans-serif;
-  --bs-border-color: #1e2631;
-  --bs-border-color-translucent: rgba(255, 255, 255, 0.08);
-  --bs-secondary-color: #8b97a6;
+  --bs-border-color: #262a30;
+  --bs-border-color-translucent: rgba(255, 255, 255, 0.06);
+  --bs-secondary-color: #7c828b;
   --bs-emphasis-color: #ffffff;
-  --bs-primary: #2f7cf6;
-  --bs-primary-rgb: 47, 124, 246;
-  --bs-link-color: #6ea8ff;
-  --bs-link-hover-color: #9cc4ff;
-  --bs-border-radius: 0.75rem;
-  --bs-border-radius-sm: 0.5rem;
-  --bs-border-radius-lg: 1rem;
+  --bs-primary: #c6f24e;
+  --bs-primary-rgb: 198, 242, 78;
+  --bs-link-color: #c6f24e;
+  --bs-link-hover-color: #d0ee66;
+  --bs-border-radius: 1rem;        /* 16px, panel */
+  --bs-border-radius-sm: 0.625rem; /* 10px, control */
+  --bs-border-radius-lg: 1.25rem;  /* 20px, contenedor */
 
-  /* Semaforo de estado, unico en toda la app. */
-  --snt-ok: #35c759;
-  --snt-warn: #ff9f0a;
-  --snt-crit: #ff453a;
-  --snt-track: rgba(255, 255, 255, 0.08);
-  --snt-superficie: #111823;
-  --snt-superficie-alta: #16202e;
+  /* Acento lima como texto sobre superficie oscura, y su tinte de fondo. */
+  --snt-accent: #c6f24e;
+  --snt-accent-ink: #050506;
+  --snt-accent-subtle: #171f04;
+  --snt-accent-glow: 0 0 0 1px rgba(198, 242, 78, 0.18), 0 0 24px rgba(198, 242, 78, 0.20);
+
+  /* Fuente mono para toda cifra que se lee como dato. */
+  --snt-mono: 'Geist Mono', 'JetBrains Mono', ui-monospace, 'SFMono-Regular', monospace;
+
+  /* Semaforo de estado (rampa de calor de Solvex), unico en toda la app. */
+  --snt-ok: #35c46a;
+  --snt-warn: #f5a524;
+  --snt-crit: #f04438;
+  --snt-track: rgba(255, 255, 255, 0.06);
+  --snt-superficie: #101216;
+  --snt-superficie-alta: #181b20;
+}
+
+/*
+ * Modo claro. Va DESPUES del bloque oscuro a proposito: [data-bs-theme='light']
+ * y :root tienen la misma especificidad, asi que el orden en el archivo decide.
+ * El acento se oscurece a #8fb814 para que sea legible sobre blanco; la tinta
+ * del boton lima sigue siendo oscura (heredada del bloque de arriba).
+ */
+[data-bs-theme='light'] {
+  --bs-body-bg: #ffffff;
+  --bs-body-color: #101216;
+  --bs-border-color: #d8dce1;
+  --bs-border-color-translucent: rgba(16, 18, 22, 0.08);
+  --bs-secondary-color: #5b626b;
+  --bs-emphasis-color: #000000;
+
+  /* El lima es un color de RELLENO (logo, boton) con tinta oscura encima:
+     vivo, no oliva. Como TEXTO en blanco seria ilegible, asi que enlaces y
+     codigo usan un verde oscuro aparte (--bs-link-color). */
+  --bs-primary: #c6f24e;
+  --bs-primary-rgb: 198, 242, 78;
+  --bs-link-color: #4d7c0f;
+  --bs-link-hover-color: #3f6b0a;
+
+  --snt-accent: #c6f24e;
+  --snt-accent-subtle: #eef7d4;
+  --snt-accent-glow: 0 1px 2px rgba(16, 18, 22, 0.10);
+
+  --snt-track: rgba(16, 18, 22, 0.07);
+  --snt-superficie: #f5f6f7;
+  --snt-superficie-alta: #eceef1;
+}
+
+/* El halo lima del fondo se ve como una mancha verdosa sobre blanco: fuera. */
+[data-bs-theme='light'] body {
+  background: var(--bs-body-bg);
 }
 
 body {
   background:
-    radial-gradient(1200px 600px at 15% -10%, rgba(47, 124, 246, 0.10), transparent 60%),
-    radial-gradient(900px 500px at 95% 0%, rgba(53, 199, 89, 0.06), transparent 55%),
+    radial-gradient(1100px 560px at 50% -12%, rgba(198, 242, 78, 0.08), transparent 60%),
     var(--bs-body-bg);
   min-height: 100dvh;
   -webkit-font-smoothing: antialiased;
   letter-spacing: -0.006em;
 }
 
-/* Cifras siempre alineadas: evita el baile de dígitos al actualizar en vivo. */
+/* Cifras siempre alineadas y en mono: el dato es Geist Mono, no la sans. */
 .tabular,
 .gauge-valor,
+.gauge-unidad,
+.fleet-chip .valor,
 code {
+  font-family: var(--snt-mono);
   font-variant-numeric: tabular-nums;
+}
+
+/*
+ * Boton primario en lima. Bootstrap 5.3 compila los colores de .btn-primary
+ * en duro, asi que remapear --bs-primary no basta: hay que fijar las variables
+ * --bs-btn-* que el boton lee en tiempo de ejecucion. Tinta oscura sobre lima,
+ * nunca blanco (contraste). Vale para claro y oscuro.
+ */
+.btn-primary {
+  --bs-btn-bg: var(--snt-accent);
+  --bs-btn-border-color: var(--snt-accent);
+  --bs-btn-hover-bg: color-mix(in srgb, var(--snt-accent) 88%, #000);
+  --bs-btn-hover-border-color: color-mix(in srgb, var(--snt-accent) 88%, #000);
+  --bs-btn-active-bg: color-mix(in srgb, var(--snt-accent) 80%, #000);
+  --bs-btn-active-border-color: color-mix(in srgb, var(--snt-accent) 80%, #000);
+  --bs-btn-disabled-bg: var(--snt-accent);
+  --bs-btn-disabled-border-color: var(--snt-accent);
+  --bs-btn-color: var(--snt-accent-ink);
+  --bs-btn-hover-color: var(--snt-accent-ink);
+  --bs-btn-active-color: var(--snt-accent-ink);
+  --bs-btn-disabled-color: var(--snt-accent-ink);
+  font-weight: 600;
+}
+.btn-primary:hover {
+  box-shadow: var(--snt-accent-glow);
 }
 
 /* --------------------------------------------------------------- acceso */
@@ -79,9 +157,9 @@ code {
   display: grid;
   place-items: center;
   font-size: 1.6rem;
-  color: #fff;
-  background: linear-gradient(145deg, #2f7cf6, #1a4fd0);
-  box-shadow: 0 8px 24px rgba(47, 124, 246, 0.35);
+  color: var(--snt-accent-ink);
+  background: var(--snt-accent);
+  box-shadow: var(--snt-accent-glow);
 }
 
 .brand-mark.chico {
@@ -90,6 +168,21 @@ code {
   border-radius: 9px;
   font-size: 0.95rem;
   box-shadow: none;
+}
+
+/* Logo del acceso. El wordmark es blanco: en oscuro va suelto sobre la tarjeta;
+   en claro se apoya en una placa oscura para no perder legibilidad. */
+.login-logo {
+  display: block;
+  width: min(300px, 82%);
+  height: auto;
+  margin: 0 auto;
+}
+[data-bs-theme='light'] .login-logo {
+  background: #0f1720;
+  padding: 16px 20px;
+  border-radius: var(--bs-border-radius);
+  width: min(320px, 90%);
 }
 
 .codigo-otp {
@@ -123,7 +216,8 @@ code {
 }
 
 .nav-pills-sm .nav-link.active {
-  background: rgba(255, 255, 255, 0.08);
+  /* Tinte del propio color de texto: funciona en oscuro y en claro. */
+  background: color-mix(in srgb, var(--bs-body-color) 10%, transparent);
   color: var(--bs-body-color);
 }
 
@@ -171,7 +265,7 @@ code {
 
 .mosaico.destino {
   border-color: var(--bs-primary);
-  box-shadow: 0 0 0 3px rgba(47, 124, 246, 0.22);
+  box-shadow: 0 0 0 3px rgba(198, 242, 78, 0.22);
 }
 
 .asa {
@@ -260,29 +354,29 @@ code {
 .estado-ok .punto,
 .punto.estado-ok {
   background: var(--snt-ok);
-  box-shadow: 0 0 0 3px rgba(53, 199, 89, 0.18);
+  box-shadow: 0 0 0 3px rgba(53, 196, 106, 0.18);
 }
 
 .estado-warning .punto,
 .punto.estado-warning {
   background: var(--snt-warn);
-  box-shadow: 0 0 0 3px rgba(255, 159, 10, 0.18);
+  box-shadow: 0 0 0 3px rgba(245, 165, 36, 0.18);
 }
 
 .estado-critical .punto,
 .punto.estado-critical {
   background: var(--snt-crit);
-  box-shadow: 0 0 0 3px rgba(255, 69, 58, 0.2);
+  box-shadow: 0 0 0 3px rgba(240, 68, 56, 0.2);
   animation: latido 1.6s ease-in-out infinite;
 }
 
 .estado-offline .punto,
 .punto.estado-offline {
-  background: #4b5563;
+  background: var(--snt-superficie-alta);
 }
 
 @keyframes latido {
-  50% { box-shadow: 0 0 0 7px rgba(255, 69, 58, 0); }
+  50% { box-shadow: 0 0 0 7px rgba(240, 68, 56, 0); }
 }
 
 /* Respeta la preferencia del sistema: nada de parpadeos si molestan. */
@@ -333,7 +427,8 @@ code {
 }
 
 .tabla-servidores code {
-  color: #9cc4ff;
+  color: var(--bs-link-color);
+  font-family: var(--snt-mono);
   font-size: 0.78rem;
 }
 

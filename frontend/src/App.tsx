@@ -1,6 +1,11 @@
+import { lazy, Suspense } from 'react';
 import { SessionProvider, useSession } from './context/Session';
+import { MODO_DEMO } from './lib/api';
 import { Login } from './pages/Login';
 import { Dashboard } from './pages/Dashboard';
+
+/** Solo se descarga en el build de GitHub Pages. */
+const DemoBadge = lazy(() => import('./demo/DemoBadge').then((m) => ({ default: m.DemoBadge })));
 
 /**
  * Raiz de la aplicacion. Un solo interruptor: si hay sesion activa se muestra
@@ -26,6 +31,11 @@ export function App() {
   return (
     <SessionProvider>
       <Rutas />
+      {MODO_DEMO && (
+        <Suspense fallback={null}>
+          <DemoBadge />
+        </Suspense>
+      )}
     </SessionProvider>
   );
 }
