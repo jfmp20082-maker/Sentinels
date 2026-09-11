@@ -23,9 +23,13 @@ $now = time();
 // Mismo usuario que la demo.
 $userId = 'SNT-4417';
 $secret = 'JBSWY3DPEHPK3PXPJBSWY3DPEHPK3PXP';
+// Correo del admin (destino del codigo 2FA). Se toma de una variable para no
+// dejar un correo real en el repo; el valor por defecto es neutro. Para que el
+// codigo llegue a tu bandeja, define SENTINELA_ADMIN_EMAIL antes de sembrar.
+$adminEmail = getenv('SENTINELA_ADMIN_EMAIL') ?: 'admin@novara.local';
 Db::run(
     'INSERT INTO users (id, name, email, password_hash, totp_secret, role, created_at) VALUES (?,?,?,?,?,?,?)',
-    array($userId, 'Juan Fernando', 'jfmp20082@gmail.com', password_hash('Sentinela#2026', PASSWORD_DEFAULT), $secret, 'admin', $now)
+    array($userId, 'Juan Fernando', $adminEmail, password_hash('Sentinela#2026', PASSWORD_DEFAULT), $secret, 'admin', $now)
 );
 
 // El unico servidor: este equipo. Datos administrativos tomados del propio host.

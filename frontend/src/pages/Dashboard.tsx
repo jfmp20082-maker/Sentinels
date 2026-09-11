@@ -22,6 +22,7 @@ export function Dashboard() {
   const conexion = useStreamConnection(true);
 
   const [tiles, setTiles] = useState<Tile[]>([]);
+  const [cargado, setCargado] = useState(false);   // ¿ya volvió la primera consulta?
   const [servidores, setServidores] = useState<ServerRecord[]>([]);
   const [vista, setVista] = useState<Vista>('mosaicos');
   const [modoEdicion, setModoEdicion] = useState(false);
@@ -39,7 +40,8 @@ export function Dashboard() {
         setServidores(s);
         stream.seedAlerts(a);   // el historico de PHP siembra el store del stream
       })
-      .catch((e) => setError(e.message));
+      .catch((e) => setError(e.message))
+      .finally(() => { if (vivo) setCargado(true); });
     return () => { vivo = false; };
   }, []);
 
@@ -94,7 +96,11 @@ export function Dashboard() {
         )}
 
         {vista === 'mosaicos' ? (
-          tiles.length === 0 ? (
+          !cargado ? (
+            <div className="text-center py-5 text-secondary">
+              <div className="spinner-border" role="status"><span className="visually-hidden">Cargando</span></div>
+            </div>
+          ) : tiles.length === 0 ? (
             <VacioMosaicos onNuevo={() => { setModoEdicion(true); setEditando(null); }} />
           ) : (
             <MosaicGrid

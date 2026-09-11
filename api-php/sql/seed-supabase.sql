@@ -136,7 +136,8 @@ DELETE FROM users;
 
 -- Usuario admin. Contrasena: Sentinela#2026  (hash bcrypt precalculado).
 INSERT INTO users (id, name, email, password_hash, totp_secret, role, created_at) VALUES
-  ('SNT-4417', 'Juan Fernando', 'jfmp20082@gmail.com', '$2y$10$NyFEqhFVgzVbg3T85JMUwOZvDvd88wPDK/O6PFjN8QNLoXhMfa.xS', 'JBSWY3DPEHPK3PXPJBSWY3DPEHPK3PXP', 'admin', floor(extract(epoch from now()))::bigint);
+  -- Cambia 'admin@novara.local' por tu correo real (ahi llega el codigo 2FA).
+  ('SNT-4417', 'Juan Fernando', 'admin@novara.local', '$2y$10$NyFEqhFVgzVbg3T85JMUwOZvDvd88wPDK/O6PFjN8QNLoXhMfa.xS', 'JBSWY3DPEHPK3PXPJBSWY3DPEHPK3PXP', 'admin', floor(extract(epoch from now()))::bigint);
 
 -- Este equipo (server.id srv-local). El agente Java lo actualiza al reportar.
 INSERT INTO servers (id, hostname, label, os, os_version, location, ip_private, ip_public, ip_visible, tags, agent_version, agent_secret, last_seen, status) VALUES

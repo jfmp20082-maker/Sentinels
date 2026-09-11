@@ -18,10 +18,14 @@ if (-not $env:SENTINELA_SERVICE_TOKEN) {
   $env:SENTINELA_SERVICE_TOKEN = "real-local-$([int](Get-Date -UFormat %s))"
 }
 
-Write-Host "==> Sembrando la base con este equipo (server.id srv-local)"
-Push-Location "$raiz\api-php"
-php sql/seed-local.php
-Pop-Location
+if ($env:SENTINELA_DSN) {
+  Write-Host "==> Base remota (SENTINELA_DSN definido): NO se resiembra, se usa lo que ya hay."
+} else {
+  Write-Host "==> Sembrando la base local SQLite con este equipo (server.id srv-local)"
+  Push-Location "$raiz\api-php"
+  php sql/seed-local.php
+  Pop-Location
+}
 
 Write-Host "==> Compilando el agente Java"
 Push-Location "$raiz\agent-java"
@@ -48,7 +52,7 @@ Start-Process powershell -ArgumentList '-NoExit', '-Command',
 
 Write-Host "`nListo. Abre http://127.0.0.1:5173"
 Write-Host "  Usuario : SNT-4417   Contrasena: Sentinela#2026"
-Write-Host "  El codigo de acceso (2FA) LLEGA POR CORREO a jfmp20082@gmail.com."
+Write-Host "  El codigo de acceso (2FA) LLEGA POR CORREO al correo del usuario admin."
 Write-Host "  Para que se envie de verdad, copia api-php/mail.local.php.example a"
 Write-Host "  api-php/mail.local.php y pon tu Gmail + contrasena de aplicacion de Google."
 Write-Host "  Mientras no lo configures, el codigo aparece en la pantalla de acceso"
