@@ -1,10 +1,40 @@
-# Sentinela — prototipo de monitoreo de servidores
+# Sentinel — Aplicacion web de monitoreo de servidores
 
-Panel de monitoreo de servidores en tiempo real: estado del hardware, servicios
-que administra cada máquina, direcciones IP con visibilidad controlada por el
+Aplicacion web que monitorea servicios y servidores, tanto fisicos como en la nube, pensado para personas y/o empresas que requieran de supervision 
+
+## Descripcion
+
+Aplicacion web de monitoreo de servicios y servidores en tiempo real: estado del hardware, servicios
+que administra cada máquina,servicios en la nube, direcciones IP con visibilidad controlada por el
 usuario, y alertas por uso de recursos, apagones, caídas e intentos de
 vulneración. Acceso con identificador único, contraseña y verificación en dos
 pasos. Tablero de mosaicos que cada usuario reordena y edita.
+
+## Carecteristicas
+1. Flujos de trabajo optimizados 
+2. Facil visualizacion de los procesos que se gestionan 
+3. Notificacion sobre anomalias en los servicios
+4. Interpretacion de graficas de manera periodica 
+
+## Tecnologias usadas 
+1. Typescript
+2. PHP
+3. Java
+4. CSS3
+5. PowerShell
+6. Shell
+7. Otros
+
+### Frameworks
+1. Bootstrap
+2. React
+3. Node.Js
+
+### Requisitos 
+1. 
+2. 
+3. 
+
 
 ## Las cuatro piezas
 
@@ -13,28 +43,28 @@ pasos. Tablero de mosaicos que cada usuario reordena y edita.
    │ agente Java  │ ───────────────► │  gateway Node/TS   │ ────────────► │  React 19    │
    │ (cada host)  │   /ingest        │  alertas + fan-out │   /stream     │  + Bootstrap │
    └──────────────┘                  └─────────┬──────────┘               └──────┬───────┘
-                                               │ latido, alertas                  │ REST
-                                               ▼                                  ▼
+                                               │ latido, alertas                 │ REST
+                                               ▼                                 ▼
                                      ┌────────────────────────────────────────────────┐
-                                     │   API PHP  ·  identidad, 2FA, catálogo, tablero │
-                                     │   SQLite (prototipo) / MySQL o PostgreSQL       │
+                                     │   API PHP · identidad, 2FA, catálogo, tablero  │
+                                     │   SQLite (prototipo) / Supabase                │
                                      └────────────────────────────────────────────────┘
 ```
 
-| Carpeta          | Tecnología                     | Responsabilidad                                            |
-|------------------|--------------------------------|------------------------------------------------------------|
-| `agent-java/`    | Java 17, sin dependencias      | Medir el host, firmar y enviar                              |
-| `realtime-node/` | Node 22+, TypeScript, `ws`     | Ingesta, motor de alertas, difusión en vivo                 |
-| `api-php/`       | PHP 7.3+ (probado en 7.3 y 8.x)| Login + TOTP, servidores, servicios, mosaicos, histórico    |
-| `frontend/`      | React 19, TypeScript, Bootstrap 5 | Interfaz: acceso, tablero de mosaicos, inventario         |
-| `shared/`        | TypeScript                     | Contrato de datos único para Node y el navegador            |
+| Carpeta          | Tecnología                        |  Responsabilidad                                            |
+|------------------|-----------------------------------|-------------------------------------------------------------|
+| `agent-java/`    | Java 17, sin dependencias         | Medir el host, firmar y enviar                              |
+| `realtime-node/` | Node 22+, TypeScript, `ws`        | Ingesta, motor de alertas, difusión en vivo                 |
+| `api-php/`       | PHP 7.3+ (probado en 7.3 y 8.x )  | Login + TOTP, servidores, servicios, mosaicos, histórico    |
+| `frontend/`      | React 19, TypeScript, Bootstrap 5 | Interfaz: acceso, tablero de mosaicos, inventario           |
+| `shared/`        | TypeScript                        | Contrato de datos único para Node y el navegador            |
 
 Las decisiones y sus alternativas descartadas están en
 [docs/ARQUITECTURA.md](docs/ARQUITECTURA.md).
 
 ## Arrancar la demo
 
-Requiere PHP con `pdo_sqlite` y Node 22 o superior. Cuatro terminales:
+Requiere PHP con `pdo_sqlite`(proximamente supabase) y Node 22 o superior. Cuatro terminales:
 
 ```bash
 # 1. API PHP (crea la base y los datos de prueba)
@@ -97,7 +127,17 @@ Es PHP de verdad, SQLite de verdad y WebSocket de verdad, y un agente Java real
 puede reportar contra él. Dura lo que dure el codespace encendido: se apaga solo
 a los 30 min de inactividad y la cuota gratuita es de 60 h al mes.
 
+# Estructura del proyecto
+
+proyecto/
+├── src/            # Código fuente
+├── docs/           # Documentación adicional
+├── tests/          # Pruebas
+├── README.md
+└── ...
+
 ### Pages — una maqueta navegable con enlace permanente
+
 
 `npm run build:demo` compila el frontend con el backend metido dentro del
 navegador. El generador de métricas (`realtime-node/src/fake-host.ts`) y el motor
@@ -246,6 +286,15 @@ Por defecto la base es un archivo SQLite en `api-php/data/sentinela.sqlite`
 `SENTINELA_DSN`, así que el mismo código corre contra PostgreSQL/Supabase
 cambiando esa variable. Guía paso a paso (incluye habilitar `pdo_pgsql` y el
 script de copia de datos) en [docs/SUPABASE.md](docs/SUPABASE.md).
+## Creadores
+  1. @jfmp20082-maker
+  2. @Ddg6140
+
+## Contribuyentes
+
+
+## Licencia
+Este proyecto esta bajo la licencia de Apache
 
 ## Lo que este prototipo todavía no es
 
@@ -263,7 +312,7 @@ script de copia de datos) en [docs/SUPABASE.md](docs/SUPABASE.md).
 - Sin despliegue del sistema real. El único workflow que publica algo sube la
   maqueta estática a Pages, y hay que lanzarlo a mano.
 
-#Creadores 
-1. @jfmp20082-maker
-2. @Ddg6140
-
+  # Autor
+  1. JUAN FERNANDO MARTINEZ PEREZ
+  2. FERNANDO ORTIZ ALVARADO
+  3. ERICK ALEJANDRO VAZQUEZ ARGÜELLES
