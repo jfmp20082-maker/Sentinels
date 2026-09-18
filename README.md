@@ -262,3 +262,8 @@ script de copia de datos) en [docs/SUPABASE.md](docs/SUPABASE.md).
   motor de alertas, el TOTP y el backend simulado (ver *Pruebas*).
 - Sin despliegue del sistema real. El único workflow que publica algo sube la
   maqueta estática a Pages, y hay que lanzarlo a mano.
+
+#Creadores 
+1. @jfmp20082-maker
+2. @Ddg6140
+
