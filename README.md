@@ -1,4 +1,5 @@
 # Sentinel — Aplicacion web de monitoreo de servidores
+18-Sep-2026
 
 Aplicacion web que monitorea servicios y servidores, tanto fisicos como en la nube, pensado para personas y/o empresas que requieran de supervision 
 
@@ -23,17 +24,26 @@ pasos. Tablero de mosaicos que cada usuario reordena y edita.
 4. CSS3
 5. PowerShell
 6. Shell
-7. Otros
+7. SQL (Postgresql, SupaBase, SQLITE)
+8. Bash
+9. Otros
+
+### Justificacion
+
 
 ### Frameworks
 1. Bootstrap
 2. React
 3. Node.Js
 
+### Justificacion
+
 ### Requisitos 
-1. 
-2. 
-3. 
+1. Bootstrap 5
+2. Node.js 22
+3. PHP 8.3
+4. JDK 17
+5. React 19
 
 
 ## Las cuatro piezas
@@ -55,7 +65,7 @@ pasos. Tablero de mosaicos que cada usuario reordena y edita.
 |------------------|-----------------------------------|-------------------------------------------------------------|
 | `agent-java/`    | Java 17, sin dependencias         | Medir el host, firmar y enviar                              |
 | `realtime-node/` | Node 22+, TypeScript, `ws`        | Ingesta, motor de alertas, difusión en vivo                 |
-| `api-php/`       | PHP 7.3+ (probado en 7.3 y 8.x )  | Login + TOTP, servidores, servicios, mosaicos, histórico    |
+| `api-php/`       | PHP 8.3+ (probado en 7.3 y 8.x )  | Login + TOTP, servidores, servicios, mosaicos, histórico    |
 | `frontend/`      | React 19, TypeScript, Bootstrap 5 | Interfaz: acceso, tablero de mosaicos, inventario           |
 | `shared/`        | TypeScript                        | Contrato de datos único para Node y el navegador            |
 
@@ -64,7 +74,7 @@ Las decisiones y sus alternativas descartadas están en
 
 ## Arrancar la demo
 
-Requiere PHP con `pdo_sqlite`(proximamente supabase) y Node 22 o superior. Cuatro terminales:
+- Requiere PHP con `pdo_sqlite`(proximamente supabase) y Node 22 o superior. Cuatro terminales:
 
 ```bash
 # 1. API PHP (crea la base y los datos de prueba)
@@ -114,7 +124,7 @@ distintas.
 
 `.devcontainer/` levanta las cuatro piezas dentro de un contenedor de GitHub con
 PHP 8.3, Node 22 y JDK 17. Al crear el codespace se instalan las dependencias y
-se siembra la base; al conectarte, `.devcontainer/start.sh` arranca los cuatro
+se siembra la base; al conectarte, `.devcontainer/start.sh` arranca los cuatroOtros
 procesos en segundo plano.
 
 En la pestaña **PORTS**, abrir el 5173. Solo ese puerto necesita salir: Vite hace
@@ -216,7 +226,7 @@ HMAC, WebSocket, reconexión— y la interfaz.
 ## Modo real: el panel muestra ESTA máquina
 
 La demo del navegador inventa los datos. Para ver las métricas **reales** del
-equipo que ejecuta Novara, corre el stack completo con el agente Java, que las
+equipo que ejecuta Sentinel, corre el stack completo con el agente Java, que las
 mide de verdad. En Windows, con un comando:
 
 ```powershell
@@ -291,12 +301,12 @@ script de copia de datos) en [docs/SUPABASE.md](docs/SUPABASE.md).
   2. @Ddg6140
 
 ## Contribuyentes
-
+- Erick Alejandro Vazquez Arguelles 
 
 ## Licencia
 Este proyecto esta bajo la licencia de Apache
 
-## Lo que este prototipo todavía no es
+## Areas de oportunidad y mejora 
 
 - Sin TLS: en producción va todo detrás de nginx con certificados, y el token
   de sesión debería viajar en una cookie `HttpOnly; Secure; SameSite=Strict`
@@ -312,7 +322,21 @@ Este proyecto esta bajo la licencia de Apache
 - Sin despliegue del sistema real. El único workflow que publica algo sube la
   maqueta estática a Pages, y hay que lanzarlo a mano.
 
-  # Autor
+  # Autores
   1. JUAN FERNANDO MARTINEZ PEREZ
   2. FERNANDO ORTIZ ALVARADO
   3. ERICK ALEJANDRO VAZQUEZ ARGÜELLES
+
+  ## Glosario
+
+- pdo_sqlite
+  - Controlador de PHP que implementa la interfaz de PHP Data Objects para permiter que las aplicaciones en PHP se concten y manipulen bases de datos de SQLite
+- FCM (Firebase Cloud Messaging)
+  - Plataforma de mensajeria multiplataforma  gratuita de google que permite evitar notificaciones y mensajes de forma masiva y confiable a dispositivos Android, iOS y palicacinoes web
+- TOTP (Time-based One-Time Password)
+  - Algoritmo matematico utilizado para generar tokens de seguridasd temporales de 6 codigos 
+- firma HMAC (Hash-based Message Authenthication Code)
+  - Codigo de seguridad que se utiliza para verificar la autenticidad y la integridad de un mensaje transmitido a traves de internet 
+
+  # Implementacion de SupaBase
+
