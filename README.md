@@ -299,9 +299,7 @@ script de copia de datos) en [docs/SUPABASE.md](docs/SUPABASE.md).
 ## Creadores
   1. @Ddg6140
   2. @jfmp20082-maker
-
-## Contribuyentes
-  1. @jefardvv
+  3. @jefardvv
 
 ## Licencia
 Este proyecto esta bajo la licencia de Apache
