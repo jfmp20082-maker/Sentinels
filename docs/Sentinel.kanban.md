@@ -6,10 +6,6 @@
 
 ## Backlog
 
-#### Requisitos
-<!-- id: task-1789765199446-0 -->
-Añadir requisitos del sistema para poderlo ejectuar
-
 #### Estructura de proyecto
 <!-- id: task-1789765368261-4 -->
 Corregir estructura de carpetas y archivos
@@ -30,6 +26,10 @@ Postgresql/SupaBase
 Realizar la documentacion tecnica de todo el codigo fuente
 
 ## Ready
+
+#### Requisitos
+<!-- id: task-1789765199446-0 -->
+Añadir requisitos del sistema para poderlo ejectuar
 
 ## In Progress
 

@@ -297,11 +297,11 @@ Por defecto la base es un archivo SQLite en `api-php/data/sentinela.sqlite`
 cambiando esa variable. Guía paso a paso (incluye habilitar `pdo_pgsql` y el
 script de copia de datos) en [docs/SUPABASE.md](docs/SUPABASE.md).
 ## Creadores
-  1. @jfmp20082-maker
-  2. @Ddg6140
+  1. @Ddg6140
+  2. @jfmp20082-maker
 
 ## Contribuyentes
-- Erick Alejandro Vazquez Arguelles 
+  1. @jefardvv
 
 ## Licencia
 Este proyecto esta bajo la licencia de Apache
@@ -340,3 +340,6 @@ Este proyecto esta bajo la licencia de Apache
 
   # Implementacion de SupaBase
 
+# Aplicacion Movil
+## Tecnologia 
+1. Android Studio
