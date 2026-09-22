@@ -63,6 +63,7 @@ Se llego a la conclusion que el metodo Kanban era el mas ideoneo por su rapidez 
 # Alcance 
 
 ### PMF
+`Pendiente`
 
 ### Lo que puede tambien ser
 1. Consola Remota
@@ -101,6 +102,9 @@ Se decidio hacer la aplicacion web primero para que se pueda visualizar en naveg
 
 # Hardware y tecnologia
 ### Componentes minimios
+
+`Pendiente`
+
 # Lenguaje y tecnologia 
 1. Typescript
 2. PHP
@@ -121,7 +125,9 @@ lorem
 3. Node.Js
 
 ### Justificacion
-lorem
+
+`pendiente`
+
 ### Requisitos 
 1. Bootstrap 5
 2. Node.js 22
@@ -138,3 +144,10 @@ lorem
 
 La configuracion inicial y las evidencias estan en el [README](/README.md)
 
+# Riesgos y pendientes
+
+Los pendienes se ven en el [Kanban](Sentinel.kanban.md)
+Riegos no visualizados 
+
+# Fuentes 
+`pendiente`
