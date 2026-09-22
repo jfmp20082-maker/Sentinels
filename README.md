@@ -138,14 +138,14 @@ puede reportar contra él. Dura lo que dure el codespace encendido: se apaga sol
 a los 30 min de inactividad y la cuota gratuita es de 60 h al mes.
 
 # Estructura del proyecto
-
+```
 proyecto/
 ├── src/            # Código fuente
 ├── docs/           # Documentación adicional
 ├── tests/          # Pruebas
 ├── README.md
 └── ...
-
+```
 ### Pages — una maqueta navegable con enlace permanente
 
 
