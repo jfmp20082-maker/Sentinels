@@ -3,7 +3,7 @@ import { useFormStatus } from 'react-dom';
 import { api, ApiError, codigoDemo, MODO_DEMO } from '../lib/api';
 import { useSession } from '../context/Session';
 import { ThemeToggle } from '../components/ThemeToggle';
-import logoNovara from '../assets/novara-logo.png';
+import { EstadoBolsa } from '../components/EstadoBolsa';
 
 /**
  * Acceso en dos pasos: identificador unico + contraseña, y despues el codigo
@@ -66,7 +66,14 @@ export function Login() {
   const [usuario, setUsuario] = useState<string>('');
   const [correo, setCorreo] = useState<string>('');   // correo (enmascarado) del 2FA real
   const [reenvio, setReenvio] = useState<string>('');  // aviso tras reenviar el codigo
+  const [vista, setVista] = useState<'login' | 'signup'>('login');
+  const [abierto, setAbierto] = useState(false);   // ventana emergente de acceso
   const codigoRef = useRef<HTMLInputElement>(null);
+  const idRef = useRef<HTMLInputElement>(null);
+  const formCodigoRef = useRef<HTMLFormElement>(null);
+  const [verClave, setVerClave] = useState(false);
+  const [mayusc, setMayusc] = useState(false);       // Bloq Mayus activo al escribir la clave
+  const [espera, setEspera] = useState(0);            // segundos hasta poder reenviar el codigo
 
   // Paso 1 -----------------------------------------------------------------
   const [estado1, accionPaso1] = useActionState<Paso1, FormData>(
@@ -112,54 +119,141 @@ export function Login() {
     if (tokenParcial) codigoRef.current?.focus();
   }, [tokenParcial]);
 
+  // Al abrir el login, el cursor cae en el identificador.
+  useEffect(() => {
+    if (abierto && vista === 'login' && !tokenParcial) idRef.current?.focus();
+  }, [abierto, vista, tokenParcial]);
+
+  // Cuenta atras del reenvio: evita pedir codigos en rafaga.
+  useEffect(() => {
+    if (espera <= 0) return;
+    const t = setTimeout(() => setEspera((n) => n - 1), 1000);
+    return () => clearTimeout(t);
+  }, [espera]);
+
+  useEffect(() => {
+    if (tokenParcial) setEspera(30);
+  }, [tokenParcial]);
+
+  // Esc cierra la ventana emergente.
+  useEffect(() => {
+    if (!abierto) return;
+    const alTeclear = (e: KeyboardEvent) => { if (e.key === 'Escape') setAbierto(false); };
+    window.addEventListener('keydown', alTeclear);
+    return () => window.removeEventListener('keydown', alTeclear);
+  }, [abierto]);
+
   return (
     <main className="login-shell">
       {/* React 19 sube estas etiquetas al <head> aunque esten aqui dentro. */}
       <title>Novara · Acceso</title>
       <meta name="description" content="Acceso al panel de monitoreo Novara" />
 
-      <div className="position-absolute top-0 end-0 p-3">
-        <ThemeToggle />
+      <header className="login-cab">
+        <a className="login-marca" href="/" aria-label="Novara, inicio">
+          <span className="login-marca-nombre">Novara</span>
+        </a>
+        <nav className="login-nav" aria-label="Acceso">
+          <ThemeToggle />
+          <button
+            type="button" className={`btn ${abierto && vista === 'login' ? 'btn-primary' : 'btn-outline-secondary'}`}
+            aria-pressed={abierto && vista === 'login'} onClick={() => { setVista('login'); setAbierto(true); }}
+          >
+            Login
+          </button>
+          <button
+            type="button" className={`btn ${abierto && vista === 'signup' ? 'btn-primary' : 'btn-outline-secondary'}`}
+            aria-pressed={abierto && vista === 'signup'} onClick={() => { setVista('signup'); setAbierto(true); }}
+          >
+            Sign up
+          </button>
+        </nav>
+      </header>
+
+      <div className="login-cuerpo">
+      <div className="login-col">
+        <div className="logo-circulo grande" role="img" aria-label="Novara, monitoreo de servidores" />
+      </div>
+      <EstadoBolsa />
       </div>
 
-      <div className="login-card card border-0 shadow-lg">
+      {abierto && (
+      <div className="login-modal" onMouseDown={(e) => { if (e.target === e.currentTarget) setAbierto(false); }}>
+      <div className="login-card card border-0 shadow-lg" role="dialog" aria-modal="true" aria-label={vista === 'signup' ? 'Solicitar acceso' : 'Iniciar sesión'}>
         <div className="card-body p-4 p-sm-5">
-          <div className="text-center mb-4">
-            {/* El logo ya incluye el nombre y el descriptor, asi que sustituye
-                al icono, al titulo y al subtitulo que habia aqui. */}
-            <img className="login-logo" src={logoNovara} alt="Novara - Monitoreo de servidores" />
+          <button type="button" className="btn-close login-cerrar" aria-label="Cerrar" onClick={() => setAbierto(false)} />
+          <div className="login-encabezado">
+            <span className="logo-circulo chico" role="img" aria-label="Novara" />
+            <h2 className="login-titulo">
+              {vista === 'signup' ? 'Solicitar acceso' : tokenParcial ? 'Verifica tu identidad' : 'Bienvenido de vuelta'}
+            </h2>
+            <p className="login-subtitulo">
+              {vista === 'signup'
+                ? 'Las cuentas las crea un administrador.'
+                : tokenParcial
+                  ? 'Un segundo paso protege tu cuenta.'
+                  : 'Entra para ver tus servidores en tiempo real.'}
+            </p>
+            {vista === 'login' && (
+              <ol className="pasos" aria-label={`Paso ${tokenParcial ? 2 : 1} de 2`}>
+                <li className={tokenParcial ? 'hecho' : 'actual'}><span>{tokenParcial ? '✓' : '1'}</span>Credenciales</li>
+                <li className="sep" aria-hidden="true" />
+                <li className={tokenParcial ? 'actual' : ''}><span>2</span>Verificación</li>
+              </ol>
+            )}
           </div>
-
-          {!tokenParcial ? (
+          {vista === 'signup' ? (
+            <div>
+              <ul className="login-lista">
+                <li><i className="bi bi-person-badge" />Cada persona recibe un identificador único.</li>
+                <li><i className="bi bi-shield-lock" />El acceso exige verificación en dos pasos.</li>
+                <li><i className="bi bi-envelope" />Pide el alta a tu administrador.</li>
+              </ul>
+              <button type="button" className="btn btn-primary w-100" onClick={() => setVista('login')}>
+                Ya tengo cuenta · Login
+              </button>
+            </div>
+          ) : !tokenParcial ? (
             <form action={accionPaso1} noValidate>
               <div className="form-floating mb-3">
                 <input
-                  id="id" name="id" className="form-control" placeholder="SNT-0000"
-                  autoComplete="username" defaultValue="SNT-4417" required
+                  ref={idRef} id="id" name="id" className="form-control" placeholder="SNT-0000"
+                  autoComplete="username" autoCapitalize="characters" spellCheck={false} required
                 />
                 <label htmlFor="id">Identificador único</label>
               </div>
-              <div className="form-floating mb-3">
+              <div className="form-floating mb-1 campo-clave">
                 <input
-                  id="password" name="password" type="password" className="form-control"
-                  placeholder="Contraseña" autoComplete="current-password" defaultValue="Sentinela#2026" required
+                  id="password" name="password" type={verClave ? 'text' : 'password'} className="form-control"
+                  placeholder="Contraseña" autoComplete="current-password" required
+                  onKeyUp={(e) => setMayusc(e.getModifierState('CapsLock'))}
+                  onBlur={() => setMayusc(false)}
                 />
                 <label htmlFor="password">Contraseña</label>
+                <button
+                  type="button" className="ver-clave" onClick={() => setVerClave((v) => !v)}
+                  aria-label={verClave ? 'Ocultar contraseña' : 'Mostrar contraseña'} aria-pressed={verClave}
+                >
+                  <i className={`bi ${verClave ? 'bi-eye-slash' : 'bi-eye'}`} />
+                </button>
               </div>
+              <p className="aviso-mayusc" role="status" hidden={!mayusc}>
+                <i className="bi bi-capslock" /> Bloq Mayús está activado
+              </p>
 
               {estado1.error && (
-                <div className="alert alert-danger py-2 small" role="alert">
+                <div key={estado1.error} className="alert alert-danger py-2 small mt-3 sacudir" role="alert">
                   <i className="bi bi-exclamation-triangle me-1" />{estado1.error}
                 </div>
               )}
 
               <BotonEnviar>Continuar</BotonEnviar>
               <p className="text-secondary small text-center mt-3 mb-0">
-                Paso 1 de 2 · la sesión caduca a las 12 h
+                <i className="bi bi-lock me-1" />Sesión protegida · caduca a las 12 h
               </p>
             </form>
           ) : (
-            <form action={accionPaso2} noValidate>
+            <form ref={formCodigoRef} action={accionPaso2} noValidate>
               <p className="text-center small text-secondary mb-3">
                 Hola <span className="text-body fw-medium">{usuario}</span>.{' '}
                 {MODO_DEMO
@@ -173,11 +267,15 @@ export function Login() {
                 <input
                   ref={codigoRef} id="code" name="code" className="form-control form-control-lg text-center codigo-otp"
                   inputMode="numeric" autoComplete="one-time-code" maxLength={6} placeholder="000000" required
+                  onChange={(e) => {
+                    e.target.value = e.target.value.replace(/\D/g, '').slice(0, 6);
+                    if (e.target.value.length === 6) formCodigoRef.current?.requestSubmit();
+                  }}
                 />
               </div>
 
               {estado2.error && (
-                <div className="alert alert-danger py-2 small" role="alert">
+                <div key={estado2.error} className="alert alert-danger py-2 small sacudir" role="alert">
                   <i className="bi bi-exclamation-triangle me-1" />{estado2.error}
                 </div>
               )}
@@ -185,9 +283,10 @@ export function Login() {
               <BotonEnviar>Entrar</BotonEnviar>
               {!MODO_DEMO && (
                 <button
-                  type="button" className="btn btn-link w-100 mt-2 small"
+                  type="button" className="btn btn-link w-100 mt-2 small" disabled={espera > 0}
                   onClick={async () => {
                     if (!tokenParcial) return;
+                    setEspera(30);
                     try {
                       const r = await api.resend2fa(tokenParcial);
                       setReenvio(`Código reenviado${r.sent_to ? ' a ' + r.sent_to : ''}.`);
@@ -196,7 +295,7 @@ export function Login() {
                     }
                   }}
                 >
-                  Reenviar código
+                  {espera > 0 ? `Reenviar código en ${espera} s` : 'Reenviar código'}
                 </button>
               )}
               {reenvio && <p className="text-secondary small text-center mt-1 mb-0">{reenvio}</p>}
@@ -212,6 +311,8 @@ export function Login() {
       </div>
 
       <AyudaDemo visible={Boolean(tokenParcial)} />
+      </div>
+      )}
     </main>
   );
 }

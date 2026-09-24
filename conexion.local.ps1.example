@@ -1,0 +1,9 @@
+# Copia este archivo a  conexion.local.ps1  y pon tu cadena real.
+# conexion.local.ps1 esta en .gitignore: tu contrasena NO se sube al repo.
+# run-real.ps1 lo carga solo al arrancar.
+
+# Recuerda: si tu contrasena de Supabase tiene @, escribelo como %40.
+$env:SENTINELA_DSN = "postgresql://postgres:TU_PASS@db.xxxx.supabase.co:5432/postgres"
+
+# Correo del admin (a donde llega el codigo 2FA). Opcional.
+$env:SENTINELA_ADMIN_EMAIL = "tucorreo@gmail.com"
