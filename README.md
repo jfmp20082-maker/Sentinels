@@ -5,17 +5,33 @@ Aplicacion web que monitorea servicios y servidores, tanto fisicos como en la nu
 
 ## Descripcion
 
-Aplicacion web de monitoreo de servicios y servidores en tiempo real: estado del hardware, servicios
+- Aplicacion web de monitoreo de servicios y servidores en tiempo real: estado del hardware, servicios
 que administra cada máquina,servicios en la nube, direcciones IP con visibilidad controlada por el
 usuario, y alertas por uso de recursos, apagones, caídas e intentos de
-vulneración. Acceso con identificador único, contraseña y verificación en dos
-pasos. Tablero de mosaicos que cada usuario reordena y edita.
+vulneración (inyeccion sql, ataque DNOS, `agregar el listado especifico de cuales si estan cubiertas`).
+- Acceso con identificador único  contraseña y verificación en dos pasos (enfasis en la tecnologia de verificacion a implementar, ventajas de usar esa tecnologia). - Tablero de mosaicos que cada usuario reordena y edita (que mostraran esos tableros y cual es el proposito de implementarlo ).
+
+*imagen 1*
+
+### Proposito de implementacion
+
+*imagen 2*
+
+### Proposito de implementacion
+
+*imagen 3*
+
+### Prposito de implementacion
 
 ## Carecteristicas
+
 1. Flujos de trabajo optimizados 
-2. Facil visualizacion de los procesos que se gestionan 
-3. Notificacion sobre anomalias en los servicios
-4. Interpretacion de graficas de manera periodica 
+
+2. Facil visualizacion y monitoreo de los procesos que se gestionan 
+
+3. Notificacion sobre anomalias en los servicios (servicio de notificaciones no solo locales, sino medios externos whats, correo, sms, etc)
+
+4. Interpretacion de graficas de manera periodica (historial de 60fps, semanal, quincenal o mensual dependiendo de los requerimientos o necesidades del usuario)
 
 ## Tecnologias usadas 
 1. Typescript
@@ -49,6 +65,8 @@ pasos. Tablero de mosaicos que cada usuario reordena y edita.
 ## Las cuatro piezas
 
 ```
+Cambio proximo
+
    ┌──────────────┐   HTTPS + HMAC   ┌────────────────────┐   WebSocket   ┌──────────────┐
    │ agente Java  │ ───────────────► │  gateway Node/TS   │ ────────────► │  React 19    │
    │ (cada host)  │   /ingest        │  alertas + fan-out │   /stream     │  + Bootstrap │
@@ -336,8 +354,17 @@ Este proyecto esta bajo la licencia de Apache
 - firma HMAC (Hash-based Message Authenthication Code)
   - Codigo de seguridad que se utiliza para verificar la autenticidad y la integridad de un mensaje transmitido a traves de internet 
 
-  # Implementacion de SupaBase
+# Implementacion de SupaBase
 
 # Aplicacion Movil
 ## Tecnologia 
-1. Android Studio
+- Android Studio
+### Justificacion `pendiente`
+
+### Vinculacion con la pagina web 
+
+### ETC
+
+# Nueva arquitectura por microservicio
+## Justificacion `pendiente`
+## Arquitectura `pendiente`

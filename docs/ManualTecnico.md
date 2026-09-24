@@ -113,7 +113,12 @@ proyecto/
 ### Backups
 ### Logs
 ### Errores Comunes
-### Sulciones
+#### Glosario de errores
+|Numero de error|Razon| Solucion|
+|---------------|-----|---------|
+|Error 404      |Pagina no encontrada| Reinicia la pagina o espera respuesta de servico tecnico|
+|Error 403      |Time Out| Revisa tu conexion a internet|
+Error 505
 ## Anexos `Pendiente`
 ### Glosario
 ### Referencias
