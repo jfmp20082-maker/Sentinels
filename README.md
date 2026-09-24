@@ -21,7 +21,7 @@ vulneración (inyeccion sql, ataque DNOS, `agregar el listado especifico de cual
 
 *imagen 3*
 
-### Prposito de implementacion
+### Proposito de implementacion
 
 ## Carecteristicas
 
@@ -354,14 +354,14 @@ Este proyecto esta bajo la licencia de Apache
 - firma HMAC (Hash-based Message Authenthication Code)
   - Codigo de seguridad que se utiliza para verificar la autenticidad y la integridad de un mensaje transmitido a traves de internet 
 
-# Implementacion de SupaBase
+# Implementacion de SupaBase `pendiente`
 
 # Aplicacion Movil
 ## Tecnologia 
 - Android Studio
 ### Justificacion `pendiente`
 
-### Vinculacion con la pagina web 
+### Vinculacion con la pagina web `pendiente
 
 ### ETC
 

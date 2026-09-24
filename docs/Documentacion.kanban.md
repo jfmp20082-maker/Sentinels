@@ -6,9 +6,31 @@
 
 ## Triage
 
+#### Actualizar documentacion
+<!-- id: task-1790274672772-182 -->
+Actualizar el readme, arquitectura y manual tecnico con las nuevas implementaciones y modulos que se agregaron
+- [ ] readme
+- [ ] arquitectura
+- [ ] manual tecnico
+Tags: `5s`
+<!-- priority: high -->
+<!-- workload: hard -->
+
 ## Confirmed
 
 ## In Progress
+
+#### Realizar cronograma
+<!-- id: task-1790274751532-192 -->
+realizar cronograma en base al kanban hecho
+Tags: `urgent`
+<!-- priority: critical -->
+
+#### Resolver ambiguedades
+<!-- id: task-1790274808638-217 -->
+revisar toda la documentacion para esclarecer cualquier tipo de ambiguedad
+Tags: `5s`
+<!-- workload: extreme -->
 
 ## Verify
 
