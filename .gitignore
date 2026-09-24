@@ -30,3 +30,6 @@ Thumbs.db
 # Correo: config local con la contrasena de aplicacion
 api-php/mail.local.php
 api-php/data/last-login-code.txt
+
+# Conexion local (Supabase): contiene la cadena con contrasena
+conexion.local.ps1

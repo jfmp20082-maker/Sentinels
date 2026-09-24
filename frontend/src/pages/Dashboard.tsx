@@ -161,7 +161,7 @@ function TopBar(p: TopBarProps) {
     <nav className="navbar navbar-expand sticky-top barra-superior">
       <div className="container-fluid gap-2">
         <span className="navbar-brand d-flex align-items-center gap-2 mb-0">
-          <span className="brand-mark chico" aria-hidden="true"><i className="bi bi-shield-check" /></span>
+          <span className="logo-circulo barra" role="img" aria-label="Logo de Novara" />
           <span className="fw-semibold">Novara</span>
         </span>
 

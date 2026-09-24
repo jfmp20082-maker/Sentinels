@@ -11,6 +11,13 @@
 
 $raiz = $PSScriptRoot
 
+# Carga tu conexion privada (Supabase, correo del admin) si existe. Ese archivo
+# esta en .gitignore, asi no reescribes la cadena cada vez ni se sube al repo.
+if (Test-Path "$raiz\conexion.local.ps1") {
+  . "$raiz\conexion.local.ps1"
+  Write-Host "==> conexion.local.ps1 cargado."
+}
+
 # Token de servicio compartido entre API, gateway y (via base) el agente.
 # El codigo ya no trae uno por defecto: hay que fijarlo, y las ventanas hijas
 # lo heredan de aqui. Es un valor de desarrollo local.
