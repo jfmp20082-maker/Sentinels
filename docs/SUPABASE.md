@@ -43,7 +43,7 @@ no puede conectarse a Postgres. Para habilitarlo en Windows:
    *Transaction pooler* (6543) para sembrar/migrar, porque no soporta bien las
    sentencias preparadas de `migrate()`.
 
-## Paso 2: apuntar Novara a Supabase
+## Paso 2: apuntar Sentinel a Supabase
 
 Define la variable de entorno con esa cadena (el código la traduce al DSN de
 PDO y fuerza TLS automáticamente):
@@ -83,6 +83,10 @@ $env:SENTINELA_DSN = "postgresql://postgres:TU_PASSWORD@db.xxxxxxxx.supabase.co:
 powershell -ExecutionPolicy Bypass -File run-real.ps1
 ```
 
+```bash
+export SENTINELA_DNS="postgresql://postgres:TU_PASSWORD@db.xxxxxxxx.supabase.co:542/postrges" ./run-real.ps1
+```
+
 Ojo: `run-real.ps1` **re-siembra** en cada arranque (`seed-local.php`). Si
 migraste datos que quieres conservar, no uses el script tal cual: arranca PHP,
 el gateway y el agente a mano (o comenta la línea del seed en el script).
@@ -105,3 +109,12 @@ el gateway y el agente a mano (o comenta la línea del seed en el script).
   `pdo_pgsql` habilitado ni acceso a tu proyecto. En cuanto lo habilites y
   pongas tu `SENTINELA_DSN`, corre `php sql/seed-local.php`: si crea el esquema
   y siembra sin error, está conectado. Si algo falla, mándame el mensaje.
+
+
+# Glosario 
+- Session pooler
+  - Modo de conexion para bases de datos que gestiona como se reparten las conexiones entre clientes y la base de datos 
+- DSN
+  - Cadena de texto que contiene toda la informacion necesaria para que unaaplicacion se conecte a una base de datos
+- TLS (Transport Layer Security)
+  - Protocolo criptografico que cifra y autentica las comunicaciones entre dos puntos de una red

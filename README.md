@@ -1,10 +1,50 @@
-# Sentinela — prototipo de monitoreo de servidores
+# Sentinel — Aplicacion web de monitoreo de servidores
+18-Sep-2026
 
-Panel de monitoreo de servidores en tiempo real: estado del hardware, servicios
-que administra cada máquina, direcciones IP con visibilidad controlada por el
+Aplicacion web que monitorea servicios y servidores, tanto fisicos como en la nube, pensado para personas y/o empresas que requieran de supervision 
+
+## Descripcion
+
+Aplicacion web de monitoreo de servicios y servidores en tiempo real: estado del hardware, servicios
+que administra cada máquina,servicios en la nube, direcciones IP con visibilidad controlada por el
 usuario, y alertas por uso de recursos, apagones, caídas e intentos de
 vulneración. Acceso con identificador único, contraseña y verificación en dos
 pasos. Tablero de mosaicos que cada usuario reordena y edita.
+
+## Carecteristicas
+1. Flujos de trabajo optimizados 
+2. Facil visualizacion de los procesos que se gestionan 
+3. Notificacion sobre anomalias en los servicios
+4. Interpretacion de graficas de manera periodica 
+
+## Tecnologias usadas 
+1. Typescript
+2. PHP
+3. Java
+4. CSS3
+5. PowerShell
+6. Shell
+7. SQL (Postgresql, SupaBase, SQLITE)
+8. Bash
+9. Otros
+
+### Justificacion
+
+
+### Frameworks
+1. Bootstrap
+2. React
+3. Node.Js
+
+### Justificacion
+
+### Requisitos 
+1. Bootstrap 5
+2. Node.js 22
+3. PHP 8.3
+4. JDK 17
+5. React 19
+
 
 ## Las cuatro piezas
 
@@ -13,28 +53,28 @@ pasos. Tablero de mosaicos que cada usuario reordena y edita.
    │ agente Java  │ ───────────────► │  gateway Node/TS   │ ────────────► │  React 19    │
    │ (cada host)  │   /ingest        │  alertas + fan-out │   /stream     │  + Bootstrap │
    └──────────────┘                  └─────────┬──────────┘               └──────┬───────┘
-                                               │ latido, alertas                  │ REST
-                                               ▼                                  ▼
+                                               │ latido, alertas                 │ REST
+                                               ▼                                 ▼
                                      ┌────────────────────────────────────────────────┐
-                                     │   API PHP  ·  identidad, 2FA, catálogo, tablero │
-                                     │   SQLite (prototipo) / MySQL o PostgreSQL       │
+                                     │   API PHP · identidad, 2FA, catálogo, tablero  │
+                                     │   SQLite (prototipo) / Supabase                │
                                      └────────────────────────────────────────────────┘
 ```
 
-| Carpeta          | Tecnología                     | Responsabilidad                                            |
-|------------------|--------------------------------|------------------------------------------------------------|
-| `agent-java/`    | Java 17, sin dependencias      | Medir el host, firmar y enviar                              |
-| `realtime-node/` | Node 22+, TypeScript, `ws`     | Ingesta, motor de alertas, difusión en vivo                 |
-| `api-php/`       | PHP 7.3+ (probado en 7.3 y 8.x)| Login + TOTP, servidores, servicios, mosaicos, histórico    |
-| `frontend/`      | React 19, TypeScript, Bootstrap 5 | Interfaz: acceso, tablero de mosaicos, inventario         |
-| `shared/`        | TypeScript                     | Contrato de datos único para Node y el navegador            |
+| Carpeta          | Tecnología                        |  Responsabilidad                                            |
+|------------------|-----------------------------------|-------------------------------------------------------------|
+| `agent-java/`    | Java 17, sin dependencias         | Medir el host, firmar y enviar                              |
+| `realtime-node/` | Node 22+, TypeScript, `ws`        | Ingesta, motor de alertas, difusión en vivo                 |
+| `api-php/`       | PHP 8.3+ (probado en 7.3 y 8.x )  | Login + TOTP, servidores, servicios, mosaicos, histórico    |
+| `frontend/`      | React 19, TypeScript, Bootstrap 5 | Interfaz: acceso, tablero de mosaicos, inventario           |
+| `shared/`        | TypeScript                        | Contrato de datos único para Node y el navegador            |
 
 Las decisiones y sus alternativas descartadas están en
 [docs/ARQUITECTURA.md](docs/ARQUITECTURA.md).
 
 ## Arrancar la demo
 
-Requiere PHP con `pdo_sqlite` y Node 22 o superior. Cuatro terminales:
+- Requiere PHP con `pdo_sqlite`(proximamente supabase) y Node 22 o superior. Cuatro terminales:
 
 ```bash
 # 1. API PHP (crea la base y los datos de prueba)
@@ -84,7 +124,7 @@ distintas.
 
 `.devcontainer/` levanta las cuatro piezas dentro de un contenedor de GitHub con
 PHP 8.3, Node 22 y JDK 17. Al crear el codespace se instalan las dependencias y
-se siembra la base; al conectarte, `.devcontainer/start.sh` arranca los cuatro
+se siembra la base; al conectarte, `.devcontainer/start.sh` arranca los cuatroOtros
 procesos en segundo plano.
 
 En la pestaña **PORTS**, abrir el 5173. Solo ese puerto necesita salir: Vite hace
@@ -97,7 +137,17 @@ Es PHP de verdad, SQLite de verdad y WebSocket de verdad, y un agente Java real
 puede reportar contra él. Dura lo que dure el codespace encendido: se apaga solo
 a los 30 min de inactividad y la cuota gratuita es de 60 h al mes.
 
+# Estructura del proyecto
+```
+proyecto/
+├── src/            # Código fuente
+├── docs/           # Documentación adicional
+├── tests/          # Pruebas
+├── README.md
+└── ...
+```
 ### Pages — una maqueta navegable con enlace permanente
+
 
 `npm run build:demo` compila el frontend con el backend metido dentro del
 navegador. El generador de métricas (`realtime-node/src/fake-host.ts`) y el motor
@@ -176,7 +226,7 @@ HMAC, WebSocket, reconexión— y la interfaz.
 ## Modo real: el panel muestra ESTA máquina
 
 La demo del navegador inventa los datos. Para ver las métricas **reales** del
-equipo que ejecuta Novara, corre el stack completo con el agente Java, que las
+equipo que ejecuta Sentinel, corre el stack completo con el agente Java, que las
 mide de verdad. En Windows, con un comando:
 
 ```powershell
@@ -246,8 +296,15 @@ Por defecto la base es un archivo SQLite en `api-php/data/sentinela.sqlite`
 `SENTINELA_DSN`, así que el mismo código corre contra PostgreSQL/Supabase
 cambiando esa variable. Guía paso a paso (incluye habilitar `pdo_pgsql` y el
 script de copia de datos) en [docs/SUPABASE.md](docs/SUPABASE.md).
+## Creadores
+  1. @Ddg6140
+  2. @jfmp20082-maker
+  3. @jefardvv
 
-## Lo que este prototipo todavía no es
+## Licencia
+Este proyecto esta bajo la licencia de Apache
+
+## Areas de oportunidad y mejora 
 
 - Sin TLS: en producción va todo detrás de nginx con certificados, y el token
   de sesión debería viajar en una cookie `HttpOnly; Secure; SameSite=Strict`
@@ -262,3 +319,25 @@ script de copia de datos) en [docs/SUPABASE.md](docs/SUPABASE.md).
   motor de alertas, el TOTP y el backend simulado (ver *Pruebas*).
 - Sin despliegue del sistema real. El único workflow que publica algo sube la
   maqueta estática a Pages, y hay que lanzarlo a mano.
+
+  # Autores
+  1. JUAN FERNANDO MARTINEZ PEREZ
+  2. FERNANDO ORTIZ ALVARADO
+  3. ERICK ALEJANDRO VAZQUEZ ARGÜELLES
+
+  ## Glosario
+
+- pdo_sqlite
+  - Controlador de PHP que implementa la interfaz de PHP Data Objects para permiter que las aplicaciones en PHP se concten y manipulen bases de datos de SQLite
+- FCM (Firebase Cloud Messaging)
+  - Plataforma de mensajeria multiplataforma  gratuita de google que permite evitar notificaciones y mensajes de forma masiva y confiable a dispositivos Android, iOS y palicacinoes web
+- TOTP (Time-based One-Time Password)
+  - Algoritmo matematico utilizado para generar tokens de seguridasd temporales de 6 codigos 
+- firma HMAC (Hash-based Message Authenthication Code)
+  - Codigo de seguridad que se utiliza para verificar la autenticidad y la integridad de un mensaje transmitido a traves de internet 
+
+  # Implementacion de SupaBase
+
+# Aplicacion Movil
+## Tecnologia 
+1. Android Studio

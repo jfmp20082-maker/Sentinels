@@ -1,4 +1,5 @@
-# Decisiones de arquitectura
+# Decision de la  arquitectura
+
 
 Por qué cada tecnología está donde está, y qué se descartó.
 
@@ -46,7 +47,7 @@ criptografía (`javax.crypto.Mac`) sin bajar una sola dependencia.
 - `Json.java` — 90 líneas de serializador. Se instala en máquinas ajenas: cada
   dependencia es superficie de ataque y trabajo de parcheo ajeno.
 
-**Descartado.** Un script Python o Bash por sistema: tres bases de código que
+`Descartado`. Un script Python o Bash por sistema: tres bases de código que
 divergen. Un binario Go sería igual de válido y más ligero, pero Java estaba en
 los requisitos y la JVM ya suele estar instalada en servidores corporativos.
 
@@ -67,14 +68,14 @@ los requisitos y la JVM ya suele estar instalada en servidores corporativos.
 - `index.ts` — servidor HTTP con `/ingest` (verifica la firma HMAC con
   `timingSafeEqual`, no con `===`) y `/healthz`.
 - `hub.ts` — un `WebSocketServer` con `noServer: true` sobre el mismo puerto;
-  el *upgrade* solo se acepta si el token del panel es válido en PHP. Guarda 60
+  el *upgrade* `solo se acepta si el token del panel es válido en PHP. Guarda 60
   muestras por servidor para que un cliente que acaba de conectarse vea la
-  gráfica completa desde el primer frame.
-- `alerts.ts` — reglas con histéresis (`for_s`), alertas de servicio caído,
+  gráfica completa desde el primer frame.`
+- `alerts.ts` — estructura con heap (`minHeap`), alertas de servicio caído,
   paso a UPS, puertos fuera de línea base, e intentos de acceso fallidos.
   Las caídas se detectan **por silencio**, en un temporizador, porque un
   servidor apagado justamente deja de enviar datos.
-- `simulator.ts` — seis agentes falsos que firman con el mismo HMAC. El gateway
+- `simulator.ts`(pruebas) — seis agentes falsos que firman con el mismo HMAC. El gateway
   no los distingue de agentes reales, que es la prueba de que el contrato está
   bien definido.
 
@@ -111,11 +112,11 @@ comparar en tiempo constante, `hash_hmac()`, PDO con sentencias preparadas.
 - `src/Db.php` — PDO sobre SQLite en el prototipo. Nada del SQL usado es
   propietario: cambiar `SENTINELA_DSN` a MySQL o PostgreSQL es todo el trabajo.
 
-**La decisión de las IP.** Cuando `ip_visible = 0` la API devuelve
+**IP enmascarado.** Cuando `ip_visible = 0` la API devuelve
 `ip_private: null`. No se enmascara en el cliente, porque enmascarar en el
 cliente es teatro: el dato seguiría estando en el JSON de la pestaña de red.
 
-**Descartado.** Poner también el tiempo real en PHP con *long polling*: consume
+`Descartado`. Poner también el tiempo real en PHP con *long polling*: consume
 un proceso por cliente conectado y añade segundos de latencia. Poner el CRUD en
 Node: se pierde la facilidad de despliegue que fue la razón de elegir PHP.
 
@@ -197,3 +198,12 @@ solo, hereda las variables CSS del tema y se anima con `stroke-dasharray`.
 Falta para producción: TLS en todo, token en cookie `HttpOnly` en vez de
 `sessionStorage`, límite de peticiones por IP, y rotación de los secretos de los
 agentes.
+
+# Glosario
+- ScheduledExecutorServices
+  - Permite  programar tareas para que se ejecuten despues de un retraso o de fomra periodica, usando un pool de hilos en lugar de crear hilos manualmente con `Timer`/`TimerTask` que son mas limitados y propensos a errores 
+- Ingest
+  - Es un endpoint de Node/TypteScript que funje como puerta de entrada por donde cada angente java manda sus muestras de monitoreo cada 5seg
+- healtz
+  - Otro endpoint que verifica la salud del proceso permitiendo comprobar rapidamente si el gateway esta vivo y respondiendo, sin necesidad de la autentificacion ni enviar datos de monitoreo
+
