@@ -8,15 +8,6 @@
 
 ## Confirmed
 
-#### Reorganizacion de archivos
-<!-- id: task-1790274286726-158 -->
-reorganisa como aparece en el readme
-- [ ] src
-- [ ] docs
-- [ ] test
-- [ ] readme.md
-Tags: `5s`
-
 #### Subir la aplicacion al dominio
 <!-- id: task-1790308294221-18 -->
 hacer la produccion en el dominio
@@ -36,13 +27,6 @@ Tags: `5s`
 <!-- priority: high -->
 <!-- workload: hard -->
 
-#### API/endpoints
-<!-- id: task-1790308680786-151 -->
-Dar apis y endpoints utilizados en la aplicacion
-
-#### implementar el port para dispositivos moviles
-<!-- id: task-1790308320733-37 -->
-
 #### Diseño del sistema
 <!-- id: task-1790308728831-204 -->
 - [ ] Microdiseño
@@ -50,5 +34,21 @@ Dar apis y endpoints utilizados en la aplicacion
 - [ ] Diagrama de casos de uso
 
 ## Verify
+
+#### implementar el port para dispositivos moviles
+<!-- id: task-1790308320733-37 -->
+
+#### Reorganizacion de archivos
+<!-- id: task-1790274286726-158 -->
+reorganisa como aparece en el readme
+- [ ] src
+- [ ] docs
+- [ ] test
+- [ ] readme.md
+Tags: `5s`
+
+#### API/endpoints
+<!-- id: task-1790308680786-151 -->
+Dar apis y endpoints utilizados en la aplicacion
 
 ## Closed
