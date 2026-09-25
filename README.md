@@ -35,11 +35,11 @@ Se especifica mas en el apartado de seguridad en el [Manual Tecnico](/docs/Manua
 
 ### Proposito de implementacion
 
-## Carecteristicas
+## Caracteristicas
 
 1. Mayor eficiencia en el recurso humano, teniendo mayor eficiencia en areas requeridas.
 
-2. Facil visualizacion y monitoreo de los procesos que se gestionan 
+2. Facil visualizacion y monitoreo de los procesos que se gestionan (sustituye la palabra gestionan, por se ejecutan dentro del servidor ) 
 
 3. Notificacion sobre anomalias en los servicios (servicio de notificaciones no solo locales, sino medios externos whats, correo, sms, etc)
 
