@@ -6,12 +6,6 @@
 
 ## Triage
 
-#### Cambio de arquitectura del software
-<!-- id: task-1790274492704-166 -->
-Cambiar arquitectura mvc a microservicio
-Tags: `5s`
-<!-- workload: hard -->
-
 ## Confirmed
 
 #### Reorganizacion de archivos
@@ -23,6 +17,16 @@ reorganisa como aparece en el readme
 - [ ] readme.md
 Tags: `5s`
 
+#### Subir la aplicacion al dominio
+<!-- id: task-1790308294221-18 -->
+hacer la produccion en el dominio
+
+#### Cambio de arquitectura del software
+<!-- id: task-1790274492704-166 -->
+Cambiar arquitectura mvc a microservicio
+Tags: `5s`
+<!-- workload: hard -->
+
 ## In Progress
 
 #### Implementar Supabase
@@ -31,6 +35,19 @@ Cambiar SQLite a supa base, elaborar diagrama entidad relacion
 Tags: `5s`
 <!-- priority: high -->
 <!-- workload: hard -->
+
+#### API/endpoints
+<!-- id: task-1790308680786-151 -->
+Dar apis y endpoints utilizados en la aplicacion
+
+#### implementar el port para dispositivos moviles
+<!-- id: task-1790308320733-37 -->
+
+#### Diseño del sistema
+<!-- id: task-1790308728831-204 -->
+- [ ] Microdiseño
+- [ ] Macrodiseño
+- [ ] Diagrama de casos de uso
 
 ## Verify
 
