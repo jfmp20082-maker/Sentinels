@@ -106,7 +106,83 @@ proyecto/
 ```
 ### Explicacion de modulos/rutas principales
 ## API/Endponits `Pendiente`
-### Lista de endpoints, metodos, parametros, respuestas
+### API PHP - localhost:8080
+Identidad, 2FA, catalogo de servidores, tablero de mosaicos e historico de alertas. Codigo en
+`api-php/public/index.php.`
+### Lista de endpoints
+#### Endpoints publicos (sin sesion)
+No requieren token de autenticacion.
+|Metodo|Ruta| ¿Que hace?|Cuerpo/parametro|
+|------|-----|--------|-------|
+|GET|`/api/health`|Ping de salud del servicio| --|
+|POST|`/api/auth/login`|Paso 1 del login: valida credenciales y envia codigo 2FA por correo| `{id, password}`|     
+|POST|`/api/auth/2fa`|Paso 2: valida el codigo de 6 digitos y activa la sesion|`{token, code}`|
+|POST|`/api/auth/resend`|Reenvia un nuevo codigo de 2FA|`{token}`|
+|GET|`/api/dev/last-code`|[DEV] Ultimo codigo de 2FA, solo si NO hay SMTP configurado| --|
+|GET|`/api/demo/totp `|[DEMO] Codigo TOTP vigente, solo si existe data/DEMO o SENTINELA_DEMO=1|--|
+
+#### Endpoints con sesion (Authorization < token >)
+Todos pasan por requireUser(), que corta con 401 si el token no es valido o esta caducado.
+|Metodo|Ruta|¿Que hace?|Cuerpo/parametros|
+|-----|-----------|-----|--|
+|POST| `/api/auth/logout`| Cierra la sesion actual | ---|
+|GET| `/api/me ` | Datos del usuario autenticado|---|
+|POST| `/api/me/totp` | Genera secreto TOTP y URI para QR de un autenticador| ---|
+|GET|`/api/servers `|Lista de servidores (oculta IP si ip_visible=false)| ---
+|GET|`/api/servers/{id}`|Detalle de un servidor + sus servicios vigilados|id en la URL|
+|PATCH|`/api/servers/{id}`|Edita label, tags o visibilidad de IP (no permitido a role viewer)|`{label?, ip_visible?, tags?}`
+|GET|`/api/tiles`|Tablero de mosaicos del usuario actual |---|
+|PUT|`/api/tiles`|Reemplaza el tablero completo (una transaccion, sin diffs)| `{tiles: [...]}`|
+|GET|`/api/alerts `|Historico de alertas, mas recientes primero|`?limit=` (1-200, def.50)`|
+|POST|`/api/alerts/{id}/ack`|Marca una alerta como atendida|id en la URL|
+|GET|`/api/alert-rules `|Reglas de alerta del usuario (y las globales)|---|
+|POST|`/api/push/register`| Registra token de notificaciones push del dispositivo|`{token, platform}`|
+
+#### Enpoints internos (solo el gateway, con SENTINELA_SERVICE_TOKEN)
+Se autentican con un secreto de servicio compartido (Bearer), no con sesion de usuario. Sin la variable de entorno configurada, responden 503 en vez de quedar abiertos.
+
+|Metodo|Ruta|¿Que hace?|Cuerpo/parametros|
+|-----|-----------|-----|--|
+|GET|`/internal/fleet `|Lista de servidores y sus secretos HMAC (para validar firmas de agentes)| ---|
+|POST|` /internal/heartbeat`| El gateway reporta el ultimo latido/estado de un agente |`{server_id, ts, status, agent_version}`|
+|POST|`/internal/alerts `| El gateway escribe el historico de alertas generadas|objeto de alerta|
+
+### Gateway Node/TypeScript — localhost:8081
+Ingesta de metricas, motor de alertas y difusion en vivo. Codigo en `realtime-node/src/index.ts` (WebSocket en `src/hub.ts`).
+
+#### RUTAS HTTP
+|Metodo|Ruta|¿Que hace?|
+|-----|-----------|-----|
+|GET|`/healthz`|Ping de salud del gateway|
+|POST|`/ingest`|El agente Java manda sus metricas aqui cada pocos segundos, firmadas con HMAC(cabecera X-Sentinela-Signature). El gateway valida la firma, guarda la muestra, evalua alertas y retransmite por WebSocket.|
+#### WebSocket
+|Ruta|¿Que hace?|
+|-----|-----------|
+|`/stream`|El frontend se conecta aqui para recibir metricas y alertas en tiempo real. Se autentica con el mismo token de sesion del usuario, que el gateway valida contra GET /api/me de la API PHP antes de aceptar la conexion.|
+
+El gateway tambien es cliente de la API PHP: llama internamente a `/internal/fleet, /internal/heartbeat` y
+`/internal/alerts` para no duplicar el estado en dos bases distintas.
+
+### Agente Java — sin endpoints propios
+Es un cliente puro: no abre ningun puerto ni atiende peticiones. Cada pocos segundos mide el equipo (CPU,
+memoria, discos, servicios, puertos, temperatura/energia si el sistema operativo lo expone) y manda `POST`
+`http://<gateway.url>/ingest` — por defecto `http://127.0.0.1:8081/ingest`, configurable en
+`agent-java/agent.properties`. Cada envio va firmado con HMAC usando el secreto propio del servidor (`agent.secret`).
+
+### Servicios y APIs externos
+|Servicio|¿Para que se usa?| ¿Donde se configura?| Estado|
+|--------|-----------------|---------------------|-------|
+|Supabase(PostgreSQL)|Base de datos en produccion. Por defecto el sistema usa un archivo SQLite local; cambiar SENTINELA_DSN mueve el mismo codigo a Postgres/Supabase sin tocar nada mas.|`SENTINELA_DSN` en `conexion.local.ps1`| Configurado y en uso en esta instalacion|
+|Gmail SMTP (smtp.gmail.com:587)|Envio del codigo de acceso (2FA) por correo electronico|api-php/mail.local.php (contrasena de aplicacion de Google)|Configurado y en uso|
+|APNs (Apple)/FCM(Google)|Notificaciones push a moviles. El endpoint /api/push/register ya guarda el token del dispositivo, pero el envio real todavia no esta implementado.| --- |Pendiente (solo el registro existe)|
+
+### Contrato de datos compartido
+
+`shared/types.ts` define los tipos TypeScript (por ejemplo `MetricSample`) que usan a la vez el gateway Node y el frontend React, para que ambos lados del WebSocket hablen exactamente el mismo formato de datos sin duplicar definiciones.
+
+
+
+### metodos, parametros, respuestas
 ## Seguridad `Pendiente`
 Se realizaron pruebas de las vulneraciones pertinentes ara garantizar la seguridad de la informacion de cada servidor y/o servicio vinvulado a la app 
      ### Detalle de cada prueba 
